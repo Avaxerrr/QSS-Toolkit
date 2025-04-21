@@ -1,0 +1,25 @@
+<idea-plugin>
+  <id>io.github.avaxerrr.qsstoolkit</id>
+  <name>QSS Toolkit</name>
+  <vendor>avaxerrr</vendor>
+  <description><![CDATA[
+        Provides support for Qt Style Sheets (QSS) in PyCharm.
+        Features include syntax highlighting, code completion,
+        and a color picker for QSS files.
+    ]]></description>
+
+  <!-- Product and plugin compatibility requirements -->
+  <depends>com.intellij.modules.platform</depends>
+  <depends>com.intellij.modules.lang</depends>
+  <depends>com.intellij.modules.python</depends>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <!-- File type registration -->
+    <fileType name="QSS" implementationClass="io.github.avaxerrr.qsstoolkit.QssFileType"
+              language="QSS" extensions="qss"/>
+
+    <!-- Syntax highlighter -->
+    <lang.syntaxHighlighterFactory language="QSS"
+                                   implementationClass="io.github.avaxerrr.qsstoolkit.highlighting.QssSyntaxHighlighterFactory"/>
+  </extensions>
+</idea-plugin>
