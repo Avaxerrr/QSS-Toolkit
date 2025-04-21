@@ -21,5 +21,17 @@
     <!-- Syntax highlighter -->
     <lang.syntaxHighlighterFactory language="QSS"
                                    implementationClass="io.github.avaxerrr.qsstoolkit.highlighting.QssSyntaxHighlighterFactory"/>
+
+    <!-- Parser definition -->
+    <lang.parserDefinition language="QSS"
+                           implementationClass="io.github.avaxerrr.qsstoolkit.parser.QssParserDefinition"/>
+
+    <!-- Color annotator -->
+    <annotator language="QSS"
+               implementationClass="io.github.avaxerrr.qsstoolkit.highlighting.QssColorAnnotator"/>
+
+    <!-- Completion contributor -->
+    <completion.contributor language="QSS"
+                            implementationClass="io.github.avaxerrr.qsstoolkit.completion.QssCompletionContributor"/>
   </extensions>
 </idea-plugin>
