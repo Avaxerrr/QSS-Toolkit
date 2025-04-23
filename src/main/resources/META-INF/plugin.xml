@@ -3,16 +3,33 @@
   <name>QSS Toolkit</name>
   <vendor>avaxerrr</vendor>
   <description><![CDATA[
-        Provides comprehensive support for Qt Style Sheets (QSS) in PyCharm.
+    <h2>QSS Toolkit: Complete Qt Style Sheet Support for PyCharm and IntelliJ-based IDEs</h2>
 
-        Features include:
-        - Syntax highlighting for QSS files
-        - Code completion for properties and values
-        - Color picker with hex value preview
-        - Code folding for better readability
-        - Structure view for quick navigation
-        - Color palette management for project-wide consistency
-    ]]></description>
+    <p>QSS Toolkit adds comprehensive Qt Style Sheet editing capabilities to PyCharm and other IntelliJ-based IDEs with Python support, providing all the modern tools you need for professional Qt application styling.</p>
+
+    <h3>Key Features:</h3>
+    <ul>
+      <li><b>Syntax Highlighting</b> - Specialized highlighting for Qt selectors, properties, pseudo-states, and color values</li>
+      <li><b>Integrated Color Tools</b> - In-editor color picker with gutter previews for hex color values</li>
+      <li><b>Smart Code Completion</b> - Context-aware suggestions for Qt widgets, properties, and values</li>
+      <li><b>Color Palette Management</b> - Create, save, copy and reuse colors across your Qt projects</li>
+      <li><b>Structure Navigation</b> - Hierarchical view of selectors and properties for quick navigation</li>
+      <li><b>Code Folding</b> - Collapse complex selectors and property blocks for better readability</li>
+    </ul>
+
+    <h3>IDE Compatibility:</h3>
+    <p>This plugin works with PyCharm (Community and Professional) and any IntelliJ-based IDE with the Python plugin installed, including IntelliJ IDEA.</p>
+
+    <h3>Why QSS Toolkit?</h3>
+    <p>This plugin integrates seamlessly into your development environment, maintaining your workflow while adding specialized tools for Qt styling.</p>
+
+    <p>Perfect for Qt developers who want to enhance productivity and code quality when styling Qt applications in Python projects.</p>
+
+    <h3>Getting Started</h3>
+    <p>Simply install the plugin and open any .qss file. All features are immediately available with no additional configuration required.</p>
+]]></description>
+
+
 
   <!-- Product and plugin compatibility requirements -->
   <depends>com.intellij.modules.platform</depends>

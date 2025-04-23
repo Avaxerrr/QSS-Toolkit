@@ -12,6 +12,13 @@ import java.awt.Color
 import java.awt.Component
 import java.awt.Dimension
 import javax.swing.*
+import java.awt.Toolkit
+import java.awt.datatransfer.StringSelection
+import javax.swing.JPopupMenu
+import javax.swing.JMenuItem
+import javax.swing.JOptionPane
+import java.awt.event.KeyEvent
+import java.awt.event.KeyAdapter
 
 class QssColorPaletteToolWindowFactory : ToolWindowFactory {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
@@ -48,6 +55,51 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
         // Setup color list
         colorList.cellRenderer = ColorListCellRenderer()
         colorList.selectionMode = ListSelectionModel.SINGLE_SELECTION
+
+        colorList.addMouseListener(object : java.awt.event.MouseAdapter() {
+            override fun mouseClicked(e: java.awt.event.MouseEvent) {
+                if (e.clickCount == 2) {
+                    val index = colorList.locationToIndex(e.point)
+                    if (index >= 0) {
+                        colorList.selectedIndex = index
+                        val selectedColor = colorList.selectedValue
+                        if (selectedColor != null) {
+                            copyToClipboard(selectedColor.toHex())
+                            // Optional: Show a tooltip or status message that the color was copied
+                            JOptionPane.showMessageDialog(
+                                panel,
+                                "Copied ${selectedColor.toHex()} to clipboard",
+                                "Color Copied",
+                                JOptionPane.INFORMATION_MESSAGE
+                            )
+                        }
+                    }
+                }
+            }
+        })
+
+        colorList.addKeyListener(object : KeyAdapter() {
+            override fun keyPressed(e: KeyEvent) {
+                // Check for Ctrl+C (or Cmd+C on Mac)
+                if (e.isControlDown && e.keyCode == KeyEvent.VK_C) {
+                    val selectedColor = colorList.selectedValue
+                    if (selectedColor != null) {
+                        // Copy the hex value to clipboard
+                        val hexValue = selectedColor.toHex()
+                        val selection = StringSelection(hexValue)
+                        val clipboard = Toolkit.getDefaultToolkit().systemClipboard
+                        clipboard.setContents(selection, null)
+
+                        // Consume the event to prevent default copy
+                        e.consume()
+                    }
+                }
+            }
+        })
+
+
+        // Set up the context menu
+        setupContextMenu()
 
         // Create split pane
         val splitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT)
@@ -102,22 +154,33 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
                     )
 
                     if (newColor != null) {
+                        // Still show the dialog, but don't enforce naming
                         val name = Messages.showInputDialog(
                             project,
-                            "Enter color name:",
+                            "Enter color name (optional):",
                             "New Color",
                             null
                         )
 
-                        if (!name.isNullOrBlank()) {
-                            selectedPalette.addColor(QssColor(name, newColor))
-                            paletteManager.updateState()
-                            updateColorList()
+                        // Generate a default name if blank or null (canceled)
+                        val colorName = if (name.isNullOrBlank()) {
+                            // Create hex-based name for unnamed colors
+                            val hexColor = String.format("#%02X%02X%02X",
+                                newColor.red, newColor.green, newColor.blue)
+                            "Color $hexColor"
+                        } else {
+                            name
                         }
+
+                        // Always add color with either user-provided or generated name
+                        selectedPalette.addColor(QssColor(colorName, newColor))
+                        paletteManager.updateState()
+                        updateColorList()
                     }
                 }
             }
         }
+
 
         removeColorButton.addActionListener {
             val selectedPalette = paletteList.selectedValue
@@ -201,7 +264,7 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
                 swatch.border = BorderFactory.createLineBorder(Color.BLACK)
 
                 // Set up label
-                label.text = "${value.name} (${value.toHex()})"
+                label.text = "${value.name} (${value.toHex()}) - Right-click to copy"
                 label.background = if (isSelected) list.selectionBackground else list.background
 
                 panel.add(swatch, BorderLayout.WEST)
@@ -212,5 +275,47 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
 
             return label
         }
+    }
+
+
+    private fun setupContextMenu() {
+        val menu = JPopupMenu()
+
+        val copyHexItem = JMenuItem("Copy Hex Value")
+        copyHexItem.addActionListener {
+            val selectedColor = colorList.selectedValue
+            if (selectedColor != null) {
+                copyToClipboard(selectedColor.toHex())
+            }
+        }
+        menu.add(copyHexItem)
+
+        val copyQssPropertyItem = JMenuItem("Copy as QSS Color Property")
+        copyQssPropertyItem.addActionListener {
+            val selectedColor = colorList.selectedValue
+            if (selectedColor != null) {
+                copyToClipboard("color: ${selectedColor.toHex()};")
+            }
+        }
+        menu.add(copyQssPropertyItem)
+
+        val copyQssBackgroundItem = JMenuItem("Copy as QSS Background Property")
+        copyQssBackgroundItem.addActionListener {
+            val selectedColor = colorList.selectedValue
+            if (selectedColor != null) {
+                copyToClipboard("background-color: ${selectedColor.toHex()};")
+            }
+        }
+        menu.add(copyQssBackgroundItem)
+
+        // Add the context menu to the color list
+        colorList.componentPopupMenu = menu
+    }
+
+    // Utility method for copying text
+    private fun copyToClipboard(text: String) {
+        val selection = StringSelection(text)
+        val clipboard = Toolkit.getDefaultToolkit().systemClipboard
+        clipboard.setContents(selection, null)
     }
 }
