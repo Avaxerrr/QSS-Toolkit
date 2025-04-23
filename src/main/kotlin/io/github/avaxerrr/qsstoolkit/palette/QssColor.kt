@@ -1,3 +1,6 @@
+// QSS Toolkit version 1.0
+
+
 package io.github.avaxerrr.qsstoolkit.palette
 
 import java.awt.Color

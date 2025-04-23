@@ -1,3 +1,5 @@
+// QSS Toolkit version 1.0
+
 package io.github.avaxerrr.qsstoolkit.structure
 
 import com.intellij.ide.structureView.StructureViewBuilder

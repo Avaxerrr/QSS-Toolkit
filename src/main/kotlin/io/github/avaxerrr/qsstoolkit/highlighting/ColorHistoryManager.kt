@@ -1,3 +1,4 @@
+// QSS Toolkit version 1.0
 
 package io.github.avaxerrr.qsstoolkit.highlighting
 

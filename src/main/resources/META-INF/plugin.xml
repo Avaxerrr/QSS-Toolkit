@@ -1,7 +1,8 @@
 <idea-plugin>
   <id>io.github.avaxerrr.qsstoolkit</id>
   <name>QSS Toolkit</name>
-  <vendor>avaxerrr</vendor>
+  <vendor email="zonemaxq@gmail.com" url="https://github.com/avaxerrr">avaxerrr</vendor>
+
   <description><![CDATA[
     <h2>QSS Toolkit: Complete Qt Style Sheet Support for PyCharm and IntelliJ-based IDEs</h2>
 

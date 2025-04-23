@@ -1,3 +1,5 @@
+// QSS Toolkit version 1.0
+
 package io.github.avaxerrr.qsstoolkit.palette
 
 import com.intellij.openapi.components.PersistentStateComponent

@@ -1,3 +1,5 @@
+// QSS Toolkit version 1.0
+
 package io.github.avaxerrr.qsstoolkit.highlighting
 
 import com.intellij.lexer.Lexer

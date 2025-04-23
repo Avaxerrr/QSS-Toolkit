@@ -1,3 +1,5 @@
+// QSS Toolkit version 1.0
+
 package io.github.avaxerrr.qsstoolkit.completion
 
 import com.intellij.codeInsight.completion.*

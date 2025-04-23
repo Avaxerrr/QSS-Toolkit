@@ -1,3 +1,5 @@
+// QSS Toolkit version 1.0
+
 package io.github.avaxerrr.qsstoolkit.lexer
 
 import com.intellij.psi.tree.IElementType
