@@ -1,6 +1,5 @@
 package io.github.avaxerrr.qsstoolkit.palette
 
-import io.github.avaxerrr.qsstoolkit.palette.QssColor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.wm.ToolWindow
@@ -8,9 +7,6 @@ import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.content.ContentFactory
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Component

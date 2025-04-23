@@ -6,7 +6,8 @@ import io.github.avaxerrr.qsstoolkit.QssFileType
 import io.github.avaxerrr.qsstoolkit.QssLanguage
 
 class QssFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, QssLanguage) {
-    override fun getFileType() = QssFileType
+    // Change this line to return the INSTANCE
+    override fun getFileType() = QssFileType.INSTANCE
 
     override fun toString() = "QSS File"
 }

@@ -51,8 +51,5 @@
     <!-- Color palette tool window -->
     <toolWindow id="QSS Colors" secondary="true" icon="AllIcons.Toolwindows.ToolWindowPalette" anchor="right"
                 factoryClass="io.github.avaxerrr.qsstoolkit.palette.QssColorPaletteToolWindowFactory"/>
-
-    <!-- Persistent services -->
-    <projectService serviceImplementation="io.github.avaxerrr.qsstoolkit.palette.QssColorPaletteManager"/>
   </extensions>
 </idea-plugin>

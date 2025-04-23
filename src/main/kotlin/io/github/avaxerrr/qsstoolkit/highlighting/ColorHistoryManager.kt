@@ -1,4 +1,4 @@
-// Create this file at src/main/kotlin/io/github/avaxerrr/qsstoolkit/highlighting/ColorHistoryManager.kt
+
 package io.github.avaxerrr.qsstoolkit.highlighting
 
 import java.awt.Color
