@@ -3,9 +3,15 @@
   <name>QSS Toolkit</name>
   <vendor>avaxerrr</vendor>
   <description><![CDATA[
-        Provides support for Qt Style Sheets (QSS) in PyCharm.
-        Features include syntax highlighting, code completion,
-        and a color picker for QSS files.
+        Provides comprehensive support for Qt Style Sheets (QSS) in PyCharm.
+
+        Features include:
+        - Syntax highlighting for QSS files
+        - Code completion for properties and values
+        - Color picker with hex value preview
+        - Code folding for better readability
+        - Structure view for quick navigation
+        - Color palette management for project-wide consistency
     ]]></description>
 
   <!-- Product and plugin compatibility requirements -->
@@ -33,5 +39,20 @@
     <!-- Completion contributor -->
     <completion.contributor language="QSS"
                             implementationClass="io.github.avaxerrr.qsstoolkit.completion.QssCompletionContributor"/>
+
+    <!-- Code folding -->
+    <lang.foldingBuilder language="QSS"
+                         implementationClass="io.github.avaxerrr.qsstoolkit.folding.QssFoldingBuilder"/>
+
+    <!-- Structure view -->
+    <lang.psiStructureViewFactory language="QSS"
+                                  implementationClass="io.github.avaxerrr.qsstoolkit.structure.QssStructureViewFactory"/>
+
+    <!-- Color palette tool window -->
+    <toolWindow id="QSS Colors" secondary="true" icon="AllIcons.Toolwindows.ToolWindowPalette" anchor="right"
+                factoryClass="io.github.avaxerrr.qsstoolkit.palette.QssColorPaletteToolWindowFactory"/>
+
+    <!-- Persistent services -->
+    <projectService serviceImplementation="io.github.avaxerrr.qsstoolkit.palette.QssColorPaletteManager"/>
   </extensions>
 </idea-plugin>

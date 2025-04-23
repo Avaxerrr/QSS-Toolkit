@@ -11,6 +11,10 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import java.awt.Color
 import javax.swing.JColorChooser
+import javax.swing.SwingUtilities
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ModalityState
+
 
 class ChooseColorAction(
     private val initialColor: Color,
@@ -20,22 +24,29 @@ class ChooseColorAction(
 
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
-
-        // Find the editor containing the element
         val editor = getEditorForElement(project, element) ?: return
 
-        // Show the color chooser dialog using JColorChooser directly
-        val newColor = JColorChooser.showDialog(
-            editor.component,
-            "Choose Color",
-            initialColor
-        )
+        // Show the dialog
+        SwingUtilities.invokeLater {
+            val newColor = JColorChooser.showDialog(
+                editor.component,
+                "Choose Color",
+                initialColor
+            )
 
-        // If user selected a color, update it in the file
-        if (newColor != null) {
-            updateColorInFile(project, editor, element, newColor)
+            if (newColor != null) {
+                // Wrap the document modification in ApplicationManager.getApplication().invokeLater
+                // with the correct modality state to ensure it runs in a write-safe context
+                ApplicationManager.getApplication().invokeLater(
+                    {
+                        updateColorInFile(project, editor, element, newColor)
+                    },
+                    ModalityState.defaultModalityState() // Use the default modality state
+                )
+            }
         }
     }
+
 
     private fun getEditorForElement(project: Project, element: PsiElement): Editor? {
         val containingFile = element.containingFile ?: return null
@@ -51,11 +62,9 @@ class ChooseColorAction(
     private fun updateColorInFile(project: Project, editor: Editor, element: PsiElement, color: Color) {
         val hexColor = String.format("#%02X%02X%02X", color.red, color.green, color.blue)
 
-        // Get the range of text to replace
         val startOffset = element.textRange.startOffset
         val endOffset = element.textRange.endOffset
 
-        // Update the text
         WriteCommandAction.runWriteCommandAction(project) {
             editor.document.replaceString(startOffset, endOffset, hexColor)
             editor.caretModel.moveToOffset(startOffset + hexColor.length)
