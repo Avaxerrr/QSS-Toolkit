@@ -30,6 +30,7 @@ interface QssTokenTypes {
         val HASH = QssElementType("HASH") // #
         val DOT = QssElementType("DOT") // .
         val PSEUDO_STATE = QssElementType("PSEUDO_STATE") // :hover, etc.
+        val PSEUDO_ELEMENT = QssElementType("PSEUDO_ELEMENT") // ::item, etc.
 
         // Invalid or unexpected token
         val BAD_CHARACTER = TokenType.BAD_CHARACTER

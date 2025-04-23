@@ -67,14 +67,30 @@ class QssParser : PsiParser {
         while (!builder.eof() && builder.tokenType != QssTokenTypes.LBRACE) {
             when (builder.tokenType) {
                 QssTokenTypes.IDENTIFIER, QssTokenTypes.HASH, QssTokenTypes.DOT,
-                QssTokenTypes.PSEUDO_STATE, QssTokenTypes.COMMA -> {
+                QssTokenTypes.PSEUDO_STATE, QssTokenTypes.PSEUDO_ELEMENT,
+                QssTokenTypes.COMMA -> {
                     hasSelectorComponents = true
                     builder.advanceLexer()
                 }
                 QssTokenTypes.WHITE_SPACE, QssTokenTypes.COMMENT -> {
                     builder.advanceLexer()
                 }
+                QssTokenTypes.COLON -> {
+                    // Special handling for colon that might be part of a property declaration
+                    if (!hasSelectorComponents) {
+                        selectorMarker.drop()
+                        return false
+                    }
+                    // Otherwise, treat it as part of the selector
+                    hasSelectorComponents = true
+                    builder.advanceLexer()
+                }
                 else -> {
+                    // This is hit when we encounter an unexpected token
+                    if (hasSelectorComponents) {
+                        selectorMarker.done(QssTypes.SELECTOR_LIST)
+                        return true
+                    }
                     selectorMarker.drop()
                     return hasSelectorComponents
                 }
@@ -89,6 +105,7 @@ class QssParser : PsiParser {
 
         return hasSelectorComponents
     }
+
 
     private fun parseDeclarations(builder: PsiBuilder) {
         while (!builder.eof() && builder.tokenType != QssTokenTypes.RBRACE) {
