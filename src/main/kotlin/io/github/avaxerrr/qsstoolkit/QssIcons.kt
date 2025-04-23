@@ -4,5 +4,5 @@ import com.intellij.openapi.util.IconLoader
 
 object QssIcons {
     @JvmField
-    val FILE = IconLoader.getIcon("/icons/qss.svg", QssIcons::class.java)
+    val FILE = IconLoader.getIcon("/META-INF/icons/16x.png", QssIcons::class.java)
 }

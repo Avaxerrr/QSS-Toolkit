@@ -1,6 +1,6 @@
 plugins {
   id("java")
-  id("org.jetbrains.kotlin.jvm") version "1.9.25"
+  id("org.jetbrains.kotlin.jvm") version "2.1.0"
   id("org.jetbrains.intellij.platform") version "2.5.0"
 }
 
@@ -19,7 +19,7 @@ dependencies {
   intellijPlatform {
     // Change to PyCharm Community Edition
     // The "PC" type indicates PyCharm Community Edition
-    create("PC", "2024.2.5")
+    create("PC", "2025.1")
     testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
 
     // For PyCharm Community, only use PythonCore (not Pythonid)
