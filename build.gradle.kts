@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "io.github.avaxerrr"
-version = "1.0"
+version = "1.1"
 
 repositories {
   mavenCentral()
@@ -36,7 +36,19 @@ intellijPlatform {
     }
 
     changeNotes = """
-            Initial version
+            <h3>Version 1.1 (April 2025)</h3>
+            <ul>
+              <li><b>New Feature:</b> Create new QSS files directly from the IDE's "New" menu</li>
+              <li>Added file template for QSS files with default styling</li>
+              <li>Improved plugin integration with IDE's file creation workflow</li>
+            </ul>
+            
+            <h3>Version 1.0</h3>
+            <ul>
+              <li>Initial release with basic QSS editing support</li>
+              <li>Syntax highlighting, code completion, and structure navigation</li>
+              <li>Color palette management and integrated color tools</li>
+            </ul>
         """.trimIndent()
   }
 }

@@ -1,4 +1,4 @@
-// QSS Toolkit version 1.0
+// QSS Toolkit version 1.1
 
 package io.github.avaxerrr.qsstoolkit.psi.impl
 

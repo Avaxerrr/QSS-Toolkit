@@ -16,6 +16,7 @@
       <li><b>Color Palette Management</b> - Create, save, copy and reuse colors across your Qt projects</li>
       <li><b>Structure Navigation</b> - Hierarchical view of selectors and properties for quick navigation</li>
       <li><b>Code Folding</b> - Collapse complex selectors and property blocks for better readability</li>
+      <li><b>Create New QSS Files</b> - Quickly create new QSS files with templates from the IDE's New menu</li>
     </ul>
 
     <h3>IDE Compatibility:</h3>
@@ -29,8 +30,6 @@
     <h3>Getting Started</h3>
     <p>Simply install the plugin and open any .qss file. All features are immediately available with no additional configuration required.</p>
 ]]></description>
-
-
 
   <!-- Product and plugin compatibility requirements -->
   <depends>com.intellij.modules.platform</depends>
@@ -69,5 +68,18 @@
     <!-- Color palette tool window -->
     <toolWindow id="QSS Colors" secondary="true" icon="AllIcons.Toolwindows.ToolWindowPalette" anchor="right"
                 factoryClass="io.github.avaxerrr.qsstoolkit.palette.QssColorPaletteToolWindowFactory"/>
+
+    <!-- File template for creating new QSS files -->
+    <internalFileTemplate name="QssFile"/>
   </extensions>
+
+  <actions>
+    <!-- Create New QSS File action -->
+    <action id="QssToolkit.NewQssFile"
+            class="io.github.avaxerrr.qsstoolkit.actions.CreateQssFileAction"
+            text="QSS File"
+            description="Create a new QSS style sheet file">
+      <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFile"/>
+    </action>
+  </actions>
 </idea-plugin>
