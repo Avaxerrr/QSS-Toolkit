@@ -79,7 +79,7 @@
             class="io.github.avaxerrr.qsstoolkit.actions.CreateQssFileAction"
             text="QSS File"
             description="Create a new QSS style sheet file">
-      <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFile"/>
+      <add-to-group group-id="NewGroup" anchor="after" relative-to-action="NewPythonFile"/>
     </action>
   </actions>
 </idea-plugin>
