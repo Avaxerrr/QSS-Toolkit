@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
+import com.intellij.ide.util.PropertiesComponent
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.content.ContentFactory
@@ -150,36 +151,50 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
             val selectedPalette = paletteList.selectedValue
             if (selectedPalette != null) {
                 SwingUtilities.invokeLater {
-                    val newColor = JColorChooser.showDialog(
+                    // Create customized color chooser
+                    val colorChooser = JColorChooser()
+
+                    // Remove CMYK panel and configure tabs
+                    configureColorChooserPanels(colorChooser)
+
+                    // Show dialog with customized chooser
+                    val dialog = JColorChooser.createDialog(
                         panel,
                         "Choose Color",
-                        null
+                        true,  // modal
+                        colorChooser,
+                        { actionEvent ->  // FIXED: Changed from 'newColor' to 'actionEvent'
+                            // OK action - get the selected color from the chooser
+                            val selectedColor = colorChooser.color
+                            if (selectedColor != null) {
+                                // Save the selected panel for next time
+                                saveSelectedPanel(colorChooser)
+
+                                // Ask for color name
+                                val name = Messages.showInputDialog(
+                                    project,
+                                    "Enter color name (optional):",
+                                    "New Color",
+                                    null
+                                )
+
+                                // Generate a default name if blank or null (canceled)
+                                val colorName = if (name.isNullOrBlank()) {
+                                    val hexColor = String.format("#%02X%02X%02X", selectedColor.red, selectedColor.green, selectedColor.blue)
+                                    "Color $hexColor"
+                                } else {
+                                    name
+                                }
+
+                                selectedPalette.addColor(QssColor(colorName, selectedColor))
+                                paletteManager.updateState()
+                                updateColorList()
+                            }
+                        },
+                        null  // Cancel action
                     )
 
-                    if (newColor != null) {
-                        // Still show the dialog, but don't enforce naming
-                        val name = Messages.showInputDialog(
-                            project,
-                            "Enter color name (optional):",
-                            "New Color",
-                            null
-                        )
-
-                        // Generate a default name if blank or null (canceled)
-                        val colorName = if (name.isNullOrBlank()) {
-                            // Create hex-based name for unnamed colors
-                            val hexColor = String.format("#%02X%02X%02X",
-                                newColor.red, newColor.green, newColor.blue)
-                            "Color $hexColor"
-                        } else {
-                            name
-                        }
-
-                        // Always add color with either user-provided or generated name
-                        selectedPalette.addColor(QssColor(colorName, newColor))
-                        paletteManager.updateState()
-                        updateColorList()
-                    }
+                    dialog.isVisible = true
                 }
             }
         }
@@ -211,6 +226,61 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
         // Initial refresh
         refreshPaletteList()
     }
+
+    private fun configureColorChooserPanels(colorChooser: JColorChooser) {
+        // Get all available panels
+        val allPanels = colorChooser.chooserPanels
+
+        // Filter out CMYK and Swatches panels - keep only HSV, HSL, RGB
+        val filteredPanels = allPanels.filter { panel ->
+            val displayName = panel.displayName
+            // Keep only the useful panels
+            displayName.contains("HSV", ignoreCase = true) ||
+                    displayName.contains("HSL", ignoreCase = true) ||
+                    displayName.contains("HSB", ignoreCase = true) ||
+                    displayName.contains("RGB", ignoreCase = true)
+        }
+
+        // Set filtered panels back
+        colorChooser.chooserPanels = filteredPanels.toTypedArray()
+
+        // Restore last used panel or default to HSL/HSV
+        restoreSelectedPanel(colorChooser)
+    }
+
+    private fun restoreSelectedPanel(colorChooser: JColorChooser) {
+        val properties = PropertiesComponent.getInstance()
+        val lastPanel = properties.getValue(LAST_PANEL_KEY, "HSV")
+
+        // Try to select the last used panel
+        val panels = colorChooser.chooserPanels
+        val targetPanel = panels.firstOrNull {
+            it.displayName.equals(lastPanel, ignoreCase = true)
+        } ?: panels.firstOrNull {
+            it.displayName.contains("HSV", ignoreCase = true) ||
+                    it.displayName.contains("HSL", ignoreCase = true) ||
+                    it.displayName.contains("HSB", ignoreCase = true)
+        } ?: panels.firstOrNull()
+
+        if (targetPanel != null) {
+            colorChooser.setChooserPanels(
+                panels.sortedBy { if (it == targetPanel) 0 else 1 }.toTypedArray()
+            )
+        }
+    }
+
+    private fun saveSelectedPanel(colorChooser: JColorChooser) {
+        val selectedPanel = colorChooser.chooserPanels.firstOrNull()
+        if (selectedPanel != null) {
+            val properties = PropertiesComponent.getInstance()
+            properties.setValue(LAST_PANEL_KEY, selectedPanel.displayName)
+        }
+    }
+
+    companion object {
+        private const val LAST_PANEL_KEY = "qss.color.picker.last.panel"
+    }
+
 
     private fun refreshPaletteList() {
         paletteListModel.clear()

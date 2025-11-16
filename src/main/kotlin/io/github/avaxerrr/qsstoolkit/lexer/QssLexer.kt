@@ -15,6 +15,36 @@ class QssLexer : LexerBase() {
     private var tokenEnd: Int = 0
     private var currentToken: IElementType? = null
 
+    companion object {
+        // QSS keyword values (property values that are predefined)
+        // REMOVED: border, padding, margin, top, bottom, left, right, center, middle
+        // These are primarily property names, not values
+        private val KEYWORDS = setOf(
+            // Border styles
+            "none", "solid", "dashed", "dotted", "double", "groove", "ridge", "inset", "outset",
+            // Colors (named colors)
+            "transparent", "white", "black", "red", "green", "blue", "yellow", "cyan", "magenta",
+            "gray", "grey", "darkred", "darkgreen", "darkblue", "darkcyan", "darkmagenta", "darkyellow",
+            "lightgray", "lightgrey",
+            // Font weights
+            "normal", "bold", "bolder", "lighter",
+            // Font styles
+            "italic", "oblique",
+            // Text decoration
+            "underline", "overline", "line-through",
+            // Text alignment (only when used as VALUES, not property names)
+            "left", "right", "center", "top", "bottom", "middle",
+            // Display
+            "block", "inline", "inline-block",
+            // Boolean/special
+            "true", "false", "on", "off", "yes", "no",
+            // Repeat
+            "repeat", "repeat-x", "repeat-y", "no-repeat",
+            // Qt-specific positioning (when used as values)
+            "stretch", "fixed"
+        )
+    }
+
     override fun start(buffer: CharSequence, startOffset: Int, endOffset: Int, initialState: Int) {
         this.buffer = buffer
         this.bufferStart = startOffset
@@ -105,9 +135,23 @@ class QssLexer : LexerBase() {
                 scanString()
                 currentToken = QssTokenTypes.STRING
             }
+            // Handle numbers (including decimals and with units)
+            isDigit(buffer[currentPosition]) ||
+                    (buffer[currentPosition] == '-' && currentPosition + 1 < bufferEnd &&
+                            isDigit(buffer[currentPosition + 1])) -> {
+                scanNumber()
+                currentToken = QssTokenTypes.NUMBER
+            }
             isIdentifierStart(buffer[currentPosition]) -> {
+                val start = currentPosition
                 scanIdentifier()
-                currentToken = QssTokenTypes.IDENTIFIER
+                val text = buffer.substring(start, currentPosition).lowercase()
+                // Check if it's a keyword
+                currentToken = if (KEYWORDS.contains(text)) {
+                    QssTokenTypes.KEYWORD
+                } else {
+                    QssTokenTypes.IDENTIFIER
+                }
             }
             else -> {
                 currentPosition++
@@ -154,7 +198,6 @@ class QssLexer : LexerBase() {
         val start = currentPosition
 
         // Check if it's a color
-        var isColor = true
         while (currentPosition < bufferEnd && isHexDigit(buffer[currentPosition])) {
             currentPosition++
         }
@@ -163,7 +206,11 @@ class QssLexer : LexerBase() {
         if (length == 3 || length == 6 || length == 8) {
             currentToken = QssTokenTypes.HEX_COLOR
         } else {
-            // It's an ID selector
+            // It's an ID selector - scan the rest as identifier
+            while (currentPosition < bufferEnd &&
+                (isIdentifierPart(buffer[currentPosition]) || buffer[currentPosition] == '-')) {
+                currentPosition++
+            }
             currentToken = QssTokenTypes.HASH
         }
     }
@@ -194,6 +241,41 @@ class QssLexer : LexerBase() {
         }
     }
 
+    // FIXED: Scan numbers including % as part of the number token
+    private fun scanNumber() {
+        // Handle optional negative sign
+        if (buffer[currentPosition] == '-') {
+            currentPosition++
+        }
+
+        // Scan integer part
+        while (currentPosition < bufferEnd && isDigit(buffer[currentPosition])) {
+            currentPosition++
+        }
+
+        // Handle decimal point and fractional part
+        if (currentPosition < bufferEnd && buffer[currentPosition] == '.' &&
+            currentPosition + 1 < bufferEnd && isDigit(buffer[currentPosition + 1])) {
+            currentPosition++ // Skip the decimal point
+            while (currentPosition < bufferEnd && isDigit(buffer[currentPosition])) {
+                currentPosition++
+            }
+        }
+
+        // FIXED: Handle percentage FIRST before checking for letter units
+        if (currentPosition < bufferEnd && buffer[currentPosition] == '%') {
+            currentPosition++ // Include the % as part of the number token
+            return
+        }
+
+        // Handle other units (px, em, pt, etc.)
+        if (currentPosition < bufferEnd && isIdentifierStart(buffer[currentPosition])) {
+            while (currentPosition < bufferEnd && buffer[currentPosition].isLetterOrDigit()) {
+                currentPosition++
+            }
+        }
+    }
+
     private fun scanIdentifier() {
         while (currentPosition < bufferEnd &&
             (isIdentifierPart(buffer[currentPosition]) || buffer[currentPosition] == '-')) {
@@ -202,6 +284,8 @@ class QssLexer : LexerBase() {
     }
 
     private fun isWhitespace(c: Char): Boolean = c.isWhitespace()
+
+    private fun isDigit(c: Char): Boolean = c in '0'..'9'
 
     private fun isIdentifierStart(c: Char): Boolean = c.isLetter() || c == '_'
 
