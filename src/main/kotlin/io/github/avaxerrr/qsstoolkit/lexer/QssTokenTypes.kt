@@ -21,12 +21,18 @@ interface QssTokenTypes {
         val SEMICOLON = QssElementType("SEMICOLON") // ;
         val COLON = QssElementType("COLON") // :
         val COMMA = QssElementType("COMMA") // ,
+        val LPAREN = QssElementType("LPAREN") // (
+        val RPAREN = QssElementType("RPAREN") // )
 
         // Property values
         val STRING = QssElementType("STRING")
         val NUMBER = QssElementType("NUMBER")
         val HEX_COLOR = QssElementType("HEX_COLOR")
         val KEYWORD = QssElementType("KEYWORD")
+
+        // Color functions
+        val RGB_FUNCTION = QssElementType("RGB_FUNCTION")    // rgb(...)
+        val RGBA_FUNCTION = QssElementType("RGBA_FUNCTION")  // rgba(...)
 
         // Special selectors
         val HASH = QssElementType("HASH") // #

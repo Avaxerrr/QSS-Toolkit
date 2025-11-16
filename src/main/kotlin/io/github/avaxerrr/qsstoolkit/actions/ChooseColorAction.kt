@@ -12,6 +12,7 @@ import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.ide.util.PropertiesComponent
+import io.github.avaxerrr.qsstoolkit.lexer.QssTokenTypes
 import java.awt.Color
 import java.awt.event.ActionEvent
 import javax.swing.JColorChooser
@@ -43,7 +44,7 @@ class ChooseColorAction(
                 "Choose Color",
                 true,  // modal
                 colorChooser,
-                { actionEvent ->  // FIXED: Changed from 'newColor' to 'actionEvent'
+                { actionEvent ->
                     // OK action - get the selected color from the chooser
                     val selectedColor = colorChooser.color
                     if (selectedColor != null) {
@@ -69,7 +70,6 @@ class ChooseColorAction(
         // Filter out CMYK and Swatches panels - keep only HSV, HSL, RGB
         val filteredPanels = allPanels.filter { panel ->
             val displayName = panel.displayName
-            // Keep only the useful panels
             displayName.contains("HSV", ignoreCase = true) ||
                     displayName.contains("HSL", ignoreCase = true) ||
                     displayName.contains("HSB", ignoreCase = true) ||
@@ -124,13 +124,36 @@ class ChooseColorAction(
     }
 
     private fun updateColorInFile(project: Project, editor: Editor, element: PsiElement, color: Color) {
-        val hexColor = String.format("#%02X%02X%02X", color.red, color.green, color.blue)
+        // Determine the original format and preserve it
+        val originalText = element.text
+        val newColorText = when {
+            // RGBA format: rgba(r, g, b, a)
+            originalText.startsWith("rgba(", ignoreCase = true) -> {
+                val alpha = color.alpha / 255.0f
+                String.format("rgba(%d, %d, %d, %.2f)", color.red, color.green, color.blue, alpha)
+            }
+            // RGB format: rgb(r, g, b)
+            originalText.startsWith("rgb(", ignoreCase = true) -> {
+                String.format("rgb(%d, %d, %d)", color.red, color.green, color.blue)
+            }
+            // Hex format (default): #RRGGBB
+            else -> {
+                if (color.alpha < 255) {
+                    // If color has transparency, use 8-digit hex
+                    String.format("#%02X%02X%02X%02X", color.red, color.green, color.blue, color.alpha)
+                } else {
+                    // Standard 6-digit hex
+                    String.format("#%02X%02X%02X", color.red, color.green, color.blue)
+                }
+            }
+        }
+
         val startOffset = element.textRange.startOffset
         val endOffset = element.textRange.endOffset
 
         WriteCommandAction.runWriteCommandAction(project) {
-            editor.document.replaceString(startOffset, endOffset, hexColor)
-            editor.caretModel.moveToOffset(startOffset + hexColor.length)
+            editor.document.replaceString(startOffset, endOffset, newColorText)
+            editor.caretModel.moveToOffset(startOffset + newColorText.length)
             editor.scrollingModel.scrollToCaret(ScrollType.MAKE_VISIBLE)
         }
     }

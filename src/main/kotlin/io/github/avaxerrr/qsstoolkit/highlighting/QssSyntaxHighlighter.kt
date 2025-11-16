@@ -24,10 +24,12 @@ class QssSyntaxHighlighter : SyntaxHighlighterBase() {
             QssTokenTypes.STRING -> QSS_STRING
             QssTokenTypes.NUMBER -> QSS_NUMBER
             QssTokenTypes.HEX_COLOR -> QSS_COLOR
+            QssTokenTypes.RGB_FUNCTION, QssTokenTypes.RGBA_FUNCTION -> QSS_COLOR
             QssTokenTypes.HASH -> QSS_ID_SELECTOR
             QssTokenTypes.DOT -> QSS_CLASS_SELECTOR
             QssTokenTypes.PSEUDO_STATE -> QSS_PSEUDO_STATE
             QssTokenTypes.PSEUDO_ELEMENT -> QSS_PSEUDO_ELEMENT
+            QssTokenTypes.LPAREN, QssTokenTypes.RPAREN,
             QssTokenTypes.LBRACE, QssTokenTypes.RBRACE,
             QssTokenTypes.SEMICOLON, QssTokenTypes.COLON, QssTokenTypes.COMMA -> QSS_PUNCTUATION
             QssTokenTypes.BAD_CHARACTER -> QSS_BAD_CHARACTER

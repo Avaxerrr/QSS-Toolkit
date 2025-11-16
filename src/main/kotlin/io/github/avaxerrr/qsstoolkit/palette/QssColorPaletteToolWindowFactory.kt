@@ -163,7 +163,7 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
                         "Choose Color",
                         true,  // modal
                         colorChooser,
-                        { actionEvent ->  // FIXED: Changed from 'newColor' to 'actionEvent'
+                        { actionEvent ->  // Changed from 'newColor' to 'actionEvent'
                             // OK action - get the selected color from the chooser
                             val selectedColor = colorChooser.color
                             if (selectedColor != null) {

@@ -12,12 +12,11 @@ import java.awt.Color
 
 class QssColorAnnotator : Annotator {
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
-        // Handle color values
+        // Handle hex color values
         if (element.node.elementType == QssTokenTypes.HEX_COLOR) {
             val colorText = element.text
             val hexColor = colorText.removePrefix("#")
 
-            // Validate and convert the hex color
             val color = try {
                 convertHexToColor(hexColor)
             } catch (e: Exception) {
@@ -25,7 +24,6 @@ class QssColorAnnotator : Annotator {
             }
 
             if (color != null) {
-                // Create an annotation with color preview
                 holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
                     .range(element)
                     .textAttributes(QssSyntaxHighlighter.QSS_COLOR)
@@ -34,7 +32,35 @@ class QssColorAnnotator : Annotator {
             }
         }
 
-        // If using the PSI tree, we can also check for QssColorValue
+        // Handle RGB function: rgb(255, 0, 0)
+        if (element.node.elementType == QssTokenTypes.RGB_FUNCTION) {
+            val colorText = element.text
+            val color = parseRgbFunction(colorText)
+
+            if (color != null) {
+                holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
+                    .range(element)
+                    .textAttributes(QssSyntaxHighlighter.QSS_COLOR)
+                    .gutterIconRenderer(ColorBoxIconRenderer(color, colorText, element))
+                    .create()
+            }
+        }
+
+        // Handle RGBA function: rgba(0, 0, 255, 0.5)
+        if (element.node.elementType == QssTokenTypes.RGBA_FUNCTION) {
+            val colorText = element.text
+            val color = parseRgbaFunction(colorText)
+
+            if (color != null) {
+                holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
+                    .range(element)
+                    .textAttributes(QssSyntaxHighlighter.QSS_COLOR)
+                    .gutterIconRenderer(ColorBoxIconRenderer(color, colorText, element))
+                    .create()
+            }
+        }
+
+        // If using the PSI tree for color values
         if (element is QssColorValue) {
             val colorText = element.colorText ?: return
             val hexColor = colorText.removePrefix("#")
@@ -55,21 +81,17 @@ class QssColorAnnotator : Annotator {
     }
 
     private fun convertHexToColor(hex: String): Color? {
-        // Convert hex color to Color object
         return when (hex.length) {
             3 -> {
-                // Convert 3-digit hex to 6-digit
                 val r = hex.substring(0, 1).repeat(2)
                 val g = hex.substring(1, 2).repeat(2)
                 val b = hex.substring(2, 3).repeat(2)
                 Color(r.toInt(16), g.toInt(16), b.toInt(16))
             }
             6 -> {
-                // Standard 6-digit hex
                 Color(hex.toInt(16))
             }
             8 -> {
-                // 8-digit hex with alpha
                 val r = hex.substring(0, 2).toInt(16)
                 val g = hex.substring(2, 4).toInt(16)
                 val b = hex.substring(4, 6).toInt(16)
@@ -78,5 +100,42 @@ class QssColorAnnotator : Annotator {
             }
             else -> null
         }
+    }
+
+    // Parse rgb(r, g, b) format
+    private fun parseRgbFunction(text: String): Color? {
+        try {
+            // Extract content between parentheses: rgb(255, 0, 0) -> "255, 0, 0"
+            val match = Regex("""rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)""").find(text)
+            if (match != null) {
+                val (r, g, b) = match.destructured
+                val red = r.toInt().coerceIn(0, 255)
+                val green = g.toInt().coerceIn(0, 255)
+                val blue = b.toInt().coerceIn(0, 255)
+                return Color(red, green, blue)
+            }
+        } catch (e: Exception) {
+            // Invalid format, return null
+        }
+        return null
+    }
+
+    // Parse rgba(r, g, b, a) format
+    private fun parseRgbaFunction(text: String): Color? {
+        try {
+            // Extract content: rgba(0, 0, 255, 0.5) -> "0, 0, 255, 0.5"
+            val match = Regex("""rgba\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)""").find(text)
+            if (match != null) {
+                val (r, g, b, a) = match.destructured
+                val red = r.toInt().coerceIn(0, 255)
+                val green = g.toInt().coerceIn(0, 255)
+                val blue = b.toInt().coerceIn(0, 255)
+                val alpha = (a.toFloat() * 255).toInt().coerceIn(0, 255)
+                return Color(red, green, blue, alpha)
+            }
+        } catch (e: Exception) {
+            // Invalid format, return null
+        }
+        return null
     }
 }

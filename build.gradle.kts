@@ -1,4 +1,4 @@
-// QSS Toolkit version 1.1
+// QSS Toolkit version 1.2
 
 plugins {
   id("java")
@@ -43,22 +43,32 @@ intellijPlatform {
     }
 
     changeNotes = """
-            <h3>Version xx (not yet sure) - November 2025</h3>
+            <h3>Version xx (DON'T TOUCH THIS I WILL DECIDED WHICH VERSION TO PUT HERE) - November 2025</h3>
             <ul>
-                <li><b>Universal IDE Support:</b> Now works in ALL JetBrains IDEs (CLion, IntelliJ IDEA, PyCharm, WebStorm, etc.)</li>
-                <li><b>No Python Dependency:</b> Removed Python requirement - perfect for C++ Qt developers in CLion</li>
+                <li><b>Enhanced Syntax Highlighting:</b> Professional color scheme with proper semantic separation</li>
+                <li><b>Improved Number Highlighting:</b> Numbers with units (px, em, %, pt) now properly tokenized and colored</li>
+                <li><b>Keyword Recognition:</b> CSS keywords (transparent, solid, bold, etc.) now distinct from identifiers</li>
+                <li><b>Better Selector Colors:</b> ID/class selectors visually distinct from property values</li>
+                <li><b>RGB/RGBA Support:</b> Full support for rgb() and rgba() color functions with gutter previews</li>
+                <li><b>Format Preservation:</b> Color picker preserves original format (hex, RGB, or RGBA)</li>
+                <li><b>Streamlined Color Picker:</b> Removed CMYK and Swatches tabs, remembers your preferred mode</li>
+                <li><b>Universal IDE Support:</b> Works in ALL JetBrains IDEs (CLion, PyCharm, IntelliJ, WebStorm, Rider, etc.)</li>
+                <li><b>No Python Dependency:</b> Perfect for C++ Qt developers in CLion - no Python required!</li>
             </ul>
+            
             <h3>Version 1.1 - April 2025</h3>
             <ul>
                 <li><b>New Feature:</b> Create new QSS files directly from the IDE's New menu</li>
                 <li>Added file template for QSS files with default styling</li>
                 <li>Improved plugin integration with IDE's file creation workflow</li>
             </ul>
-            <h3>Version 1.0</h3>
+            
+            <h3>Version 1.0 - Initial Release</h3>
             <ul>
                 <li>Initial release with basic QSS editing support</li>
                 <li>Syntax highlighting, code completion, and structure navigation</li>
                 <li>Color palette management and integrated color tools</li>
+                <li>Hex color support with gutter icons and color picker</li>
             </ul>
         """.trimIndent()
   }

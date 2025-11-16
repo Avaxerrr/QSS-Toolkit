@@ -5,29 +5,35 @@
   <vendor email="zonemaxq@gmail.com" url="https://github.com/avaxerrr">avaxerrr</vendor>
 
   <description><![CDATA[
-    <h2>QSS Toolkit - Complete Qt Style Sheet Support for JetBrains IDEs</h2>
-    <p>QSS Toolkit adds comprehensive Qt Style Sheet editing capabilities to all IntelliJ-based IDEs, providing modern tools for professional Qt application styling.</p>
+        <h2>QSS Toolkit - Complete Qt Style Sheet Support for JetBrains IDEs</h2>
 
-    <h3>Key Features</h3>
-    <ul>
-        <li><b>Syntax Highlighting</b> - Specialized highlighting for Qt selectors, properties, pseudo-states, and color values</li>
-        <li><b>Integrated Color Tools</b> - In-editor color picker with gutter previews for hex color values</li>
-        <li><b>Smart Code Completion</b> - Context-aware suggestions for Qt widgets, properties, and values</li>
-        <li><b>Color Palette Management</b> - Create, save, copy and reuse colors across your Qt project</li>
-        <li><b>Structure Navigation</b> - Hierarchical view of selectors and properties for quick navigation</li>
-        <li><b>Code Folding</b> - Collapse complex selectors and property blocks for better readability</li>
-        <li><b>Create New QSS Files</b> - Quickly create new QSS files with templates from the IDE's New menu</li>
-    </ul>
+        <p>Professional Qt Style Sheet (QSS) editing support for all IntelliJ Platform-based IDEs. Perfect for Qt developers working in C++, Python, or any other Qt-supported language.</p>
 
-    <h3>IDE Compatibility</h3>
-    <p>This plugin works with ALL IntelliJ-based IDEs including PyCharm, CLion, IntelliJ IDEA, WebStorm, Rider, and more. Perfect for Qt development in any language (Python, C++, etc.).</p>
+        <h3>Key Features</h3>
+        <ul>
+            <li><b>Professional Syntax Highlighting</b> - Enhanced color scheme with semantic separation for selectors, properties, keywords, and values</li>
+            <li><b>Multiple Color Formats</b> - Full support for hex (#RRGGBB), RGB (rgb(r,g,b)), and RGBA (rgba(r,g,b,a)) colors</li>
+            <li><b>Visual Color Picker</b> - Click gutter icons to edit colors with streamlined HSV, HSL, and RGB panels</li>
+            <li><b>Format Preservation</b> - Automatically maintains your chosen color format (hex, RGB, or RGBA) when editing</li>
+            <li><b>Code Completion</b> - Context-aware suggestions for Qt widgets, properties, and CSS keywords</li>
+            <li><b>Color Palettes</b> - Create and manage reusable color palettes for consistent styling</li>
+            <li><b>Structure View</b> - Navigate complex stylesheets with hierarchical selector and property views</li>
+            <li><b>Code Folding</b> - Collapse selector blocks and property groups for better readability</li>
+        </ul>
 
-    <h3>Why QSS Toolkit?</h3>
-    <p>This plugin integrates seamlessly into your development environment, maintaining your workflow while adding specialized tools for Qt styling.</p>
-    <p>Perfect for Qt developers who want to enhance productivity and code quality when styling Qt applications.</p>
+        <h3>Works Everywhere</h3>
+        <p>Compatible with all JetBrains IDEs - no language-specific dependencies required:</p>
+        <ul>
+            <li><b>CLion</b> - C++ Qt development</li>
+            <li><b>PyCharm</b> - Python Qt (PySide6, PyQt6, PySide2, PyQt5)</li>
+            <li><b>IntelliJ IDEA</b> - Java Qt (QtJambi)</li>
+            <li><b>WebStorm</b> - Qt for WebAssembly projects</li>
+            <li><b>Rider</b> - .NET Qt development</li>
+            <li><b>All other IntelliJ Platform IDEs</b></li>
+        </ul>
 
-    <h3>Getting Started</h3>
-    <p>Simply install the plugin and open any .qss file. All features are immediately available with no additional configuration required.</p>
+        <h3>Quick Start</h3>
+        <p>Install the plugin and open any .qss file. All features work immediately with no configuration needed.</p>
     ]]></description>
 
   <!-- Product and plugin compatibility requirements -->
@@ -36,11 +42,10 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <!-- File type registration -->
-    <fileType
-            name="QSS"
-            implementationClass="io.github.avaxerrr.qsstoolkit.QssFileType"
-            language="QSS"
-            extensions="qss"/>
+    <fileType name="QSS"
+              implementationClass="io.github.avaxerrr.qsstoolkit.QssFileType"
+              language="QSS"
+              extensions="qss"/>
 
     <!-- Syntax highlighter -->
     <lang.syntaxHighlighterFactory
@@ -73,12 +78,11 @@
             implementationClass="io.github.avaxerrr.qsstoolkit.structure.QssStructureViewFactory"/>
 
     <!-- Color palette tool window -->
-    <toolWindow
-            id="QSS Colors"
-            secondary="true"
-            icon="AllIcons.Toolwindows.ToolWindowPalette"
-            anchor="right"
-            factoryClass="io.github.avaxerrr.qsstoolkit.palette.QssColorPaletteToolWindowFactory"/>
+    <toolWindow id="QSS Colors"
+                secondary="true"
+                icon="AllIcons.Toolwindows.ToolWindowPalette"
+                anchor="right"
+                factoryClass="io.github.avaxerrr.qsstoolkit.palette.QssColorPaletteToolWindowFactory"/>
 
     <!-- File template for creating new QSS files -->
     <internalFileTemplate name="QssFile"/>
@@ -86,12 +90,11 @@
 
   <actions>
     <!-- Create New QSS File action -->
-    <action
-            id="QssToolkit.NewQssFile"
+    <action id="QssToolkit.NewQssFile"
             class="io.github.avaxerrr.qsstoolkit.actions.CreateQssFileAction"
             text="QSS File"
             description="Create a new QSS style sheet file">
-      <add-to-group group-id="NewGroup" anchor="after" relative-to-action="NewFile"/>
+      <add-to-group group-id="NewGroup" anchor="after" relative-to-action="NewPythonFile"/>
     </action>
   </actions>
 </idea-plugin>

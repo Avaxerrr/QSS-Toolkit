@@ -124,6 +124,15 @@ class QssLexer : LexerBase() {
                 currentPosition++
                 currentToken = QssTokenTypes.COMMA
             }
+            // Parentheses moved inside the when block
+            buffer[currentPosition] == '(' -> {
+                currentPosition++
+                currentToken = QssTokenTypes.LPAREN
+            }
+            buffer[currentPosition] == ')' -> {
+                currentPosition++
+                currentToken = QssTokenTypes.RPAREN
+            }
             buffer[currentPosition] == '#' -> {
                 scanHashOrColor()
             }
@@ -146,11 +155,25 @@ class QssLexer : LexerBase() {
                 val start = currentPosition
                 scanIdentifier()
                 val text = buffer.substring(start, currentPosition).lowercase()
+
+                // Check if it's a color function (rgb or rgba)
+                if ((text == "rgb" || text == "rgba") &&
+                    currentPosition < bufferEnd && buffer[currentPosition] == '(') {
+
+                    // Scan the entire function including parentheses and contents
+                    scanColorFunction()
+
+                    currentToken = if (text == "rgb") {
+                        QssTokenTypes.RGB_FUNCTION
+                    } else {
+                        QssTokenTypes.RGBA_FUNCTION
+                    }
+                }
                 // Check if it's a keyword
-                currentToken = if (KEYWORDS.contains(text)) {
-                    QssTokenTypes.KEYWORD
+                else if (KEYWORDS.contains(text)) {
+                    currentToken = QssTokenTypes.KEYWORD
                 } else {
-                    QssTokenTypes.IDENTIFIER
+                    currentToken = QssTokenTypes.IDENTIFIER
                 }
             }
             else -> {
@@ -160,6 +183,29 @@ class QssLexer : LexerBase() {
         }
 
         tokenEnd = currentPosition
+    }
+
+    // Scan rgb(...) or rgba(...) functions
+    private fun scanColorFunction() {
+        // We're at the opening parenthesis
+        if (currentPosition < bufferEnd && buffer[currentPosition] == '(') {
+            currentPosition++ // Skip '('
+
+            var depth = 1
+            while (currentPosition < bufferEnd && depth > 0) {
+                when (buffer[currentPosition]) {
+                    '(' -> depth++
+                    ')' -> {
+                        depth--
+                        if (depth == 0) {
+                            currentPosition++ // Include the closing ')'
+                            return
+                        }
+                    }
+                }
+                currentPosition++
+            }
+        }
     }
 
     private fun scanWhitespace() {
@@ -241,7 +287,7 @@ class QssLexer : LexerBase() {
         }
     }
 
-    // FIXED: Scan numbers including % as part of the number token
+    // Scan numbers including % as part of the number token
     private fun scanNumber() {
         // Handle optional negative sign
         if (buffer[currentPosition] == '-') {
@@ -262,7 +308,7 @@ class QssLexer : LexerBase() {
             }
         }
 
-        // FIXED: Handle percentage FIRST before checking for letter units
+        // Handle percentage FIRST before checking for letter units
         if (currentPosition < bufferEnd && buffer[currentPosition] == '%') {
             currentPosition++ // Include the % as part of the number token
             return
