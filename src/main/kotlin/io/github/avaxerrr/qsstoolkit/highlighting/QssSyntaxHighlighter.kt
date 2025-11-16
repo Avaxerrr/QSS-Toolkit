@@ -27,10 +27,14 @@ class QssSyntaxHighlighter : SyntaxHighlighterBase() {
             QssTokenTypes.RGB_FUNCTION, QssTokenTypes.RGBA_FUNCTION -> QSS_COLOR
             QssTokenTypes.HASH -> QSS_ID_SELECTOR
             QssTokenTypes.DOT -> QSS_CLASS_SELECTOR
+            QssTokenTypes.ASTERISK -> QSS_IDENTIFIER
             QssTokenTypes.PSEUDO_STATE -> QSS_PSEUDO_STATE
             QssTokenTypes.PSEUDO_ELEMENT -> QSS_PSEUDO_ELEMENT
             QssTokenTypes.LPAREN, QssTokenTypes.RPAREN,
             QssTokenTypes.LBRACE, QssTokenTypes.RBRACE,
+            QssTokenTypes.LBRACKET, QssTokenTypes.RBRACKET,
+            QssTokenTypes.EQUALS, QssTokenTypes.GT, QssTokenTypes.EXCLAMATION,  // ADD THESE
+            QssTokenTypes.SLASH,  // ADD THIS
             QssTokenTypes.SEMICOLON, QssTokenTypes.COLON, QssTokenTypes.COMMA -> QSS_PUNCTUATION
             QssTokenTypes.BAD_CHARACTER -> QSS_BAD_CHARACTER
             else -> return emptyArray()

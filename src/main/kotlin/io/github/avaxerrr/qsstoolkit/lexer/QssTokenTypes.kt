@@ -23,6 +23,13 @@ interface QssTokenTypes {
         val COMMA = QssElementType("COMMA") // ,
         val LPAREN = QssElementType("LPAREN") // (
         val RPAREN = QssElementType("RPAREN") // )
+        val LBRACKET = QssElementType("LBRACKET") // [
+        val RBRACKET = QssElementType("RBRACKET") // ]
+        val EQUALS = QssElementType("EQUALS") // =
+        val GT = QssElementType("GT") // >
+        val EXCLAMATION = QssElementType("EXCLAMATION") // !
+        val SLASH = QssElementType("SLASH") // /
+
 
         // Property values
         val STRING = QssElementType("STRING")
@@ -37,6 +44,7 @@ interface QssTokenTypes {
         // Special selectors
         val HASH = QssElementType("HASH") // #
         val DOT = QssElementType("DOT") // .
+        val ASTERISK = QssElementType("ASTERISK") // *
         val PSEUDO_STATE = QssElementType("PSEUDO_STATE") // :hover, etc.
         val PSEUDO_ELEMENT = QssElementType("PSEUDO_ELEMENT") // ::item, etc.
 

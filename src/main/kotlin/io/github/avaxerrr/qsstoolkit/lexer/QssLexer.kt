@@ -103,10 +103,16 @@ class QssLexer : LexerBase() {
                     currentToken = QssTokenTypes.COLON
                 }
             }
+            // UPDATED: Handle comments - must check for // or /* specifically
             buffer[currentPosition] == '/' && currentPosition + 1 < bufferEnd &&
                     (buffer[currentPosition + 1] == '/' || buffer[currentPosition + 1] == '*') -> {
                 scanComment()
                 currentToken = QssTokenTypes.COMMENT
+            }
+            // Handle standalone slash (for paths)
+            buffer[currentPosition] == '/' -> {
+                currentPosition++
+                currentToken = QssTokenTypes.SLASH
             }
             buffer[currentPosition] == '{' -> {
                 currentPosition++
@@ -124,7 +130,6 @@ class QssLexer : LexerBase() {
                 currentPosition++
                 currentToken = QssTokenTypes.COMMA
             }
-            // Parentheses moved inside the when block
             buffer[currentPosition] == '(' -> {
                 currentPosition++
                 currentToken = QssTokenTypes.LPAREN
@@ -133,8 +138,34 @@ class QssLexer : LexerBase() {
                 currentPosition++
                 currentToken = QssTokenTypes.RPAREN
             }
+            buffer[currentPosition] == '[' -> {
+                currentPosition++
+                currentToken = QssTokenTypes.LBRACKET
+            }
+            buffer[currentPosition] == ']' -> {
+                currentPosition++
+                currentToken = QssTokenTypes.RBRACKET
+            }
+            buffer[currentPosition] == '=' -> {
+                currentPosition++
+                currentToken = QssTokenTypes.EQUALS
+            }
+            // Child combinator
+            buffer[currentPosition] == '>' -> {
+                currentPosition++
+                currentToken = QssTokenTypes.GT
+            }
+            // Negation operator
+            buffer[currentPosition] == '!' -> {
+                currentPosition++
+                currentToken = QssTokenTypes.EXCLAMATION
+            }
             buffer[currentPosition] == '#' -> {
                 scanHashOrColor()
+            }
+            buffer[currentPosition] == '*' -> {
+                currentPosition++
+                currentToken = QssTokenTypes.ASTERISK
             }
             buffer[currentPosition] == '.' -> {
                 scanDotSelector()

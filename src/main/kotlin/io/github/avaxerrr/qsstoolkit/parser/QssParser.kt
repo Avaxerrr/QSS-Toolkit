@@ -46,21 +46,28 @@ class QssParser : PsiParser {
         }
 
         // Expect opening brace
-        if (!expectToken(builder, QssTokenTypes.LBRACE)) {
-            builder.error("Expected '{'")
+        if (builder.tokenType != QssTokenTypes.LBRACE) {
             ruleMarker.drop()
+            if (!builder.eof()) {
+                builder.advanceLexer()
+            }
             return
         }
 
+        builder.advanceLexer() // Consume {
+
         // Parse declarations
-        parseDeclarations(builder)
+        while (!builder.eof() && builder.tokenType != QssTokenTypes.RBRACE) {
+            parseDeclaration(builder)
+        }
 
         // Expect closing brace
-        expectToken(builder, QssTokenTypes.RBRACE)
+        if (builder.tokenType == QssTokenTypes.RBRACE) {
+            builder.advanceLexer()
+        }
 
         ruleMarker.done(QssTypes.RULE)
     }
-
 
     private fun parseSelectors(builder: PsiBuilder): Boolean {
         val selectorMarker = builder.mark()
@@ -69,10 +76,16 @@ class QssParser : PsiParser {
         while (!builder.eof() && builder.tokenType != QssTokenTypes.LBRACE) {
             when (builder.tokenType) {
                 QssTokenTypes.IDENTIFIER, QssTokenTypes.HASH, QssTokenTypes.DOT,
+                QssTokenTypes.ASTERISK, QssTokenTypes.GT, QssTokenTypes.EXCLAMATION,  // ADD GT and EXCLAMATION
                 QssTokenTypes.PSEUDO_STATE, QssTokenTypes.PSEUDO_ELEMENT,
                 QssTokenTypes.COMMA -> {
                     hasSelectorComponents = true
                     builder.advanceLexer()
+                }
+                // Handle attribute selectors
+                QssTokenTypes.LBRACKET -> {
+                    hasSelectorComponents = true
+                    parseAttributeSelector(builder)
                 }
                 QssTokenTypes.WHITE_SPACE, QssTokenTypes.COMMENT -> {
                     builder.advanceLexer()
@@ -109,39 +122,139 @@ class QssParser : PsiParser {
     }
 
 
-    private fun parseDeclarations(builder: PsiBuilder) {
-        while (!builder.eof() && builder.tokenType != QssTokenTypes.RBRACE) {
-            when (builder.tokenType) {
-                QssTokenTypes.IDENTIFIER -> parseDeclaration(builder)
-                else -> builder.advanceLexer()
+    private fun parseAttributeSelector(builder: PsiBuilder) {
+        // Consume the opening bracket [
+        if (builder.tokenType == QssTokenTypes.LBRACKET) {
+            builder.advanceLexer()
+        }
+
+        // Skip whitespace
+        while (builder.tokenType == QssTokenTypes.WHITE_SPACE) {
+            builder.advanceLexer()
+        }
+
+        // Expect attribute name (IDENTIFIER)
+        if (builder.tokenType == QssTokenTypes.IDENTIFIER) {
+            builder.advanceLexer()
+
+            // Skip whitespace
+            while (builder.tokenType == QssTokenTypes.WHITE_SPACE) {
+                builder.advanceLexer()
             }
+
+            // Optional: = and value
+            if (builder.tokenType == QssTokenTypes.EQUALS) {
+                builder.advanceLexer()
+
+                // Skip whitespace
+                while (builder.tokenType == QssTokenTypes.WHITE_SPACE) {
+                    builder.advanceLexer()
+                }
+
+                // Expect value (STRING or IDENTIFIER)
+                if (builder.tokenType == QssTokenTypes.STRING ||
+                    builder.tokenType == QssTokenTypes.IDENTIFIER ||
+                    builder.tokenType == QssTokenTypes.NUMBER) {
+                    builder.advanceLexer()
+                }
+            }
+        }
+
+        // Skip whitespace
+        while (builder.tokenType == QssTokenTypes.WHITE_SPACE) {
+            builder.advanceLexer()
+        }
+
+        // Expect closing bracket ]
+        if (builder.tokenType == QssTokenTypes.RBRACKET) {
+            builder.advanceLexer()
+        } else {
+            builder.error("Expected ']'")
         }
     }
 
     private fun parseDeclaration(builder: PsiBuilder) {
-        val declarationMarker = builder.mark()
+        val declMarker = builder.mark()
 
-        // Property name
-        builder.advanceLexer() // Consume identifier
+        // Skip whitespace and comments
+        while (builder.tokenType == QssTokenTypes.WHITE_SPACE ||
+            builder.tokenType == QssTokenTypes.COMMENT) {
+            builder.advanceLexer()
+        }
+
+        // Expect property name (identifier)
+        if (builder.tokenType != QssTokenTypes.IDENTIFIER) {
+            declMarker.drop()
+            // Skip until semicolon or closing brace to recover
+            while (!builder.eof() &&
+                builder.tokenType != QssTokenTypes.SEMICOLON &&
+                builder.tokenType != QssTokenTypes.RBRACE) {
+                builder.advanceLexer()
+            }
+            if (builder.tokenType == QssTokenTypes.SEMICOLON) {
+                builder.advanceLexer()
+            }
+            return
+        }
+
+        builder.advanceLexer() // Property name
+
+        // Skip whitespace
+        while (builder.tokenType == QssTokenTypes.WHITE_SPACE ||
+            builder.tokenType == QssTokenTypes.COMMENT) {
+            builder.advanceLexer()
+        }
 
         // Expect colon
-        if (!expectToken(builder, QssTokenTypes.COLON)) {
-            declarationMarker.drop()
+        if (builder.tokenType != QssTokenTypes.COLON) {
+            declMarker.drop()
+            // Skip until semicolon or closing brace
+            while (!builder.eof() &&
+                builder.tokenType != QssTokenTypes.SEMICOLON &&
+                builder.tokenType != QssTokenTypes.RBRACE) {
+                builder.advanceLexer()
+            }
+            if (builder.tokenType == QssTokenTypes.SEMICOLON) {
+                builder.advanceLexer()
+            }
             return
         }
 
-        // Parse property value(s)
+        builder.advanceLexer() // Consume the colon
+
+        // Skip whitespace
+        while (builder.tokenType == QssTokenTypes.WHITE_SPACE ||
+            builder.tokenType == QssTokenTypes.COMMENT) {
+            builder.advanceLexer()
+        }
+
+        // Parse property values
         if (!parsePropertyValues(builder)) {
-            declarationMarker.drop()
+            declMarker.drop()
+            // Skip to semicolon
+            while (!builder.eof() &&
+                builder.tokenType != QssTokenTypes.SEMICOLON &&
+                builder.tokenType != QssTokenTypes.RBRACE) {
+                builder.advanceLexer()
+            }
+            if (builder.tokenType == QssTokenTypes.SEMICOLON) {
+                builder.advanceLexer()
+            }
             return
         }
 
-        // Expect semicolon (optional)
+        // Skip whitespace
+        while (builder.tokenType == QssTokenTypes.WHITE_SPACE ||
+            builder.tokenType == QssTokenTypes.COMMENT) {
+            builder.advanceLexer()
+        }
+
+        // Expect semicolon
         if (builder.tokenType == QssTokenTypes.SEMICOLON) {
             builder.advanceLexer()
         }
 
-        declarationMarker.done(QssTypes.DECLARATION)
+        declMarker.done(QssTypes.DECLARATION)
     }
 
     private fun parsePropertyValues(builder: PsiBuilder): Boolean {
@@ -151,17 +264,32 @@ class QssParser : PsiParser {
         while (!builder.eof() &&
             builder.tokenType != QssTokenTypes.SEMICOLON &&
             builder.tokenType != QssTokenTypes.RBRACE) {
+
+            // Skip whitespace and comments
+            if (builder.tokenType == QssTokenTypes.WHITE_SPACE ||
+                builder.tokenType == QssTokenTypes.COMMENT) {
+                builder.advanceLexer()
+                continue
+            }
+
+            // Handle comma
+            if (builder.tokenType == QssTokenTypes.COMMA) {
+                builder.advanceLexer()
+                continue
+            }
+
+            // Parse value tokens
             when (builder.tokenType) {
                 QssTokenTypes.IDENTIFIER, QssTokenTypes.STRING, QssTokenTypes.NUMBER,
-                QssTokenTypes.HEX_COLOR -> {
+                QssTokenTypes.HEX_COLOR, QssTokenTypes.RGB_FUNCTION, QssTokenTypes.RGBA_FUNCTION,
+                QssTokenTypes.LPAREN, QssTokenTypes.RPAREN,  // For url()
+                QssTokenTypes.COLON, QssTokenTypes.SLASH -> {  // ADD SLASH for paths
                     hasValues = true
-                    parsePropertyValue(builder)
-                }
-                QssTokenTypes.WHITE_SPACE, QssTokenTypes.COMMENT, QssTokenTypes.COMMA -> {
-                    builder.advanceLexer()
+                    builder.advanceLexer()  // Just consume these tokens as part of values
                 }
                 else -> {
-                    builder.advanceLexer() // Skip unexpected token
+                    // Unknown token - stop parsing values
+                    break
                 }
             }
         }
@@ -180,6 +308,11 @@ class QssParser : PsiParser {
 
         when (builder.tokenType) {
             QssTokenTypes.HEX_COLOR -> {
+                val colorMarker = builder.mark()
+                builder.advanceLexer()
+                colorMarker.done(QssTypes.COLOR_VALUE)
+            }
+            QssTokenTypes.RGB_FUNCTION, QssTokenTypes.RGBA_FUNCTION -> {
                 val colorMarker = builder.mark()
                 builder.advanceLexer()
                 colorMarker.done(QssTypes.COLOR_VALUE)
@@ -205,15 +338,5 @@ class QssParser : PsiParser {
         }
 
         valueMarker.done(QssTypes.PROPERTY_VALUE)
-    }
-
-    private fun expectToken(builder: PsiBuilder, tokenType: IElementType): Boolean {
-        if (builder.tokenType == tokenType) {
-            builder.advanceLexer()
-            return true
-        }
-
-        builder.error("Expected " + tokenType.toString())
-        return false
     }
 }
