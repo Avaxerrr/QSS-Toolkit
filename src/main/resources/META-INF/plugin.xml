@@ -67,6 +67,29 @@
             language="QSS"
             implementationClass="io.github.avaxerrr.qsstoolkit.completion.QssCompletionContributor"/>
 
+    <!-- Commenter for Ctrl+/ -->
+    <lang.commenter
+            language="QSS"
+            implementationClass="io.github.avaxerrr.qsstoolkit.editing.QssCommenter"/>
+
+    <!-- Quote handler for auto-closing quotes -->
+    <lang.quoteHandler
+            language="QSS"
+            implementationClass="io.github.avaxerrr.qsstoolkit.editing.QssQuoteHandler"/>
+
+    <!-- Brace matcher for highlighting matching braces -->
+    <lang.braceMatcher
+            language="QSS"
+            implementationClass="io.github.avaxerrr.qsstoolkit.editing.QssBraceMatcher"/>
+
+    <!-- Typed handler for auto-completing braces and parentheses -->
+    <typedHandler
+            implementation="io.github.avaxerrr.qsstoolkit.editing.QssTypedHandler"/>
+
+    <!-- Enter handler for smart indentation when pressing Enter -->
+    <enterHandlerDelegate
+            implementation="io.github.avaxerrr.qsstoolkit.editing.QssEnterHandler"/>
+
     <!-- Code folding -->
     <lang.foldingBuilder
             language="QSS"
