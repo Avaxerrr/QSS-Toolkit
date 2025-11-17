@@ -45,6 +45,17 @@ intellijPlatform {
     changeNotes = """
             <h3>Version xx (DON'T TOUCH THIS I WILL DECIDED WHICH VERSION TO PUT HERE) - November 2025</h3>
             <ul>
+                <li><b>Smart Editing Features:</b> Professional auto-completion and formatting</li>
+                <li><b>Comment Toggle:</b> Ctrl+/ (Cmd+/) to quickly comment/uncomment QSS code blocks</li>
+                <li><b>Auto-Close Brackets:</b> Automatic insertion of closing braces, parentheses, and brackets</li>
+                <li><b>Smart Indentation:</b> Automatic indentation when creating new blocks with proper formatting</li>
+                <li><b>Quote Completion:</b> Auto-closes quotes for string values</li>
+                <li><b>Bracket Matching:</b> Highlights matching braces, parentheses, and brackets</li>
+                <li><b>Smart Enter Key:</b> Pressing Enter between braces creates properly indented block</li>
+                <li><b>Property Completion:</b> Auto-inserts colon and space after accepting property suggestions</li>
+                <li><b>Function Completions:</b> Added rgb() and rgba() color functions</li>
+                <li><b>Resource Functions:</b> Added url() for images and qlineargradient(), qradialgradient(), qconicalgradient() for Qt gradients</li>
+                <li><b>Context-Aware Suggestions:</b> Right functions suggested for the right properties</li>
                 <li><b>Enhanced Syntax Highlighting:</b> Professional color scheme with proper semantic separation</li>
                 <li><b>Improved Number Highlighting:</b> Numbers with units (px, em, %, pt) now properly tokenized and colored</li>
                 <li><b>Keyword Recognition:</b> CSS keywords (transparent, solid, bold, etc.) now distinct from identifiers</li>

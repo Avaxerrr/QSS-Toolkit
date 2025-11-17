@@ -12,6 +12,7 @@
         <h3>Key Features</h3>
         <ul>
             <li><b>Professional Syntax Highlighting</b> - Enhanced color scheme with semantic separation for selectors, properties, keywords, and values</li>
+            <li><b>Smart Auto-Completion</b> - Auto-insert colons, close brackets, and suggest QSS functions (rgb, rgba, url, gradients)</li>
             <li><b>Multiple Color Formats</b> - Full support for hex (#RRGGBB), RGB (rgb(r,g,b)), and RGBA (rgba(r,g,b,a)) colors</li>
             <li><b>Visual Color Picker</b> - Click gutter icons to edit colors with streamlined HSV, HSL, and RGB panels</li>
             <li><b>Format Preservation</b> - Automatically maintains your chosen color format (hex, RGB, or RGBA) when editing</li>
@@ -57,36 +58,36 @@
             language="QSS"
             implementationClass="io.github.avaxerrr.qsstoolkit.parser.QssParserDefinition"/>
 
-    <!-- Color annotator -->
+    <!-- Color annotator for gutter icons -->
     <annotator
             language="QSS"
             implementationClass="io.github.avaxerrr.qsstoolkit.highlighting.QssColorAnnotator"/>
 
-    <!-- Completion contributor -->
+    <!-- Completion contributor (includes QssPropertyInsertHandler internally) -->
     <completion.contributor
             language="QSS"
             implementationClass="io.github.avaxerrr.qsstoolkit.completion.QssCompletionContributor"/>
 
-    <!-- Commenter for Ctrl+/ -->
+    <!-- Comment toggle (Ctrl+/) -->
     <lang.commenter
             language="QSS"
             implementationClass="io.github.avaxerrr.qsstoolkit.editing.QssCommenter"/>
 
-    <!-- Quote handler for auto-closing quotes -->
+    <!-- Auto-close quotes -->
     <lang.quoteHandler
             language="QSS"
             implementationClass="io.github.avaxerrr.qsstoolkit.editing.QssQuoteHandler"/>
 
-    <!-- Brace matcher for highlighting matching braces -->
+    <!-- Highlight matching braces/brackets -->
     <lang.braceMatcher
             language="QSS"
             implementationClass="io.github.avaxerrr.qsstoolkit.editing.QssBraceMatcher"/>
 
-    <!-- Typed handler for auto-completing braces and parentheses -->
+    <!-- Auto-complete brackets with smart indent -->
     <typedHandler
             implementation="io.github.avaxerrr.qsstoolkit.editing.QssTypedHandler"/>
 
-    <!-- Enter handler for smart indentation when pressing Enter -->
+    <!-- Smart Enter key handling -->
     <enterHandlerDelegate
             implementation="io.github.avaxerrr.qsstoolkit.editing.QssEnterHandler"/>
 

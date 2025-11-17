@@ -3,6 +3,7 @@
 package io.github.avaxerrr.qsstoolkit.completion
 
 import com.intellij.codeInsight.completion.*
+import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.util.ProcessingContext
@@ -60,12 +61,13 @@ class QssCompletionContributor : CompletionContributor() {
             context: ProcessingContext,
             result: CompletionResultSet
         ) {
-            // Add QSS property completions
+            // Add QSS property completions with insert handler
             for (property in QSS_PROPERTIES) {
                 result.addElement(
                     LookupElementBuilder.create(property)
                         .withTypeText("QSS Property")
                         .withBoldness(true)
+                        .withInsertHandler(QssPropertyInsertHandler())
                 )
             }
         }
@@ -83,6 +85,20 @@ class QssCompletionContributor : CompletionContributor() {
                 "font-style" to listOf("normal", "italic", "oblique"),
                 "font-weight" to listOf("normal", "bold", "100", "200", "300", "400", "500", "600", "700", "800", "900")
             )
+
+            // Color functions
+            private val COLOR_FUNCTIONS = listOf(
+                "rgb()" to "RGB color function: rgb(red, green, blue)",
+                "rgba()" to "RGBA color function: rgba(red, green, blue, alpha)",
+            )
+
+            // Resource and gradient functions
+            private val RESOURCE_FUNCTIONS = listOf(
+                "url()" to "Load image or resource: url(\"path/to/file\")",
+                "qlineargradient()" to "Qt linear gradient function",
+                "qradialgradient()" to "Qt radial gradient function",
+                "qconicalgradient()" to "Qt conical gradient function"
+            )
         }
 
         override fun addCompletions(
@@ -95,6 +111,34 @@ class QssCompletionContributor : CompletionContributor() {
             val declaration = findParentDeclaration(element)
             val propertyName = declaration?.propertyName
 
+            // Determine what types of values to suggest based on property
+            val isColorProperty = propertyName?.contains("color") == true
+            val isBackgroundProperty = propertyName?.contains("background") == true
+            val isImageProperty = propertyName?.contains("image") == true ||
+                    propertyName == "border-image"
+
+            // Add color functions for color-related properties
+            if (isColorProperty || isBackgroundProperty) {
+                for ((function, description) in COLOR_FUNCTIONS) {
+                    result.addElement(
+                        LookupElementBuilder.create(function)
+                            .withTypeText(description)
+                            .withInsertHandler(FunctionInsertHandler())
+                    )
+                }
+            }
+
+            // Add url() and gradient functions for image/background properties
+            if (isImageProperty || isBackgroundProperty || propertyName == "background") {
+                for ((function, description) in RESOURCE_FUNCTIONS) {
+                    result.addElement(
+                        LookupElementBuilder.create(function)
+                            .withTypeText(description)
+                            .withInsertHandler(FunctionInsertHandler())
+                    )
+                }
+            }
+
             // Add common values for the property if available
             if (propertyName != null && COMMON_VALUES.containsKey(propertyName)) {
                 for (value in COMMON_VALUES[propertyName]!!) {
@@ -102,11 +146,8 @@ class QssCompletionContributor : CompletionContributor() {
                 }
             }
 
-            // Add color values for color properties
-            if (propertyName?.contains("color") == true ||
-                propertyName?.contains("background") == true) {
-
-                // Add color keywords
+            // Add color keywords for color properties
+            if (isColorProperty || isBackgroundProperty) {
                 for (color in COLOR_KEYWORDS) {
                     result.addElement(LookupElementBuilder.create(color))
                 }
@@ -168,6 +209,18 @@ class QssCompletionContributor : CompletionContributor() {
                         .withTypeText("Pseudo-state")
                 )
             }
+        }
+    }
+
+    // Insert handler for functions - positions cursor inside parentheses
+    private class FunctionInsertHandler : InsertHandler<LookupElement> {
+        override fun handleInsert(context: InsertionContext, item: LookupElement) {
+            val document = context.document
+            val tailOffset = context.tailOffset
+
+            // The function name already includes (), so move cursor inside
+            // Move cursor back 1 position to be inside the parentheses
+            context.editor.caretModel.moveToOffset(tailOffset - 1)
         }
     }
 }
