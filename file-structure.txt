@@ -1,0 +1,100 @@
+QSS Toolkit/
++--- gradle
+|    \--- wrapper
+|         +--- gradle-wrapper.jar
+|         \--- gradle-wrapper.properties
+|    
++--- icons and images
+|    +--- adasd (1).png
+|    +--- adasd (2).png
+|    +--- adasd nbg (1).png
+|    +--- adasd nbg.png
+|    +--- adasd.jpeg
+|    \--- adasd.png
+|    
++--- src
+|    \--- main
+|         +--- gen
+|         |    \--- io
+|         |         \--- github
+|         |              \--- avaxerrr
+|         |                   \--- qsstoolkit
+|         |                        \--- lexer
+|         |                             \--- _QssLexer.java
+|         |    
+|         +--- kotlin
+|         |    \--- io
+|         |         \--- github
+|         |              \--- avaxerrr
+|         |                   \--- qsstoolkit
+|         |                        +--- actions
+|         |                        |    +--- ChooseColorAction.kt
+|         |                        |    \--- CreateQssFileAction.kt
+|         |                        |    
+|         |                        +--- commenter
+|         |                        +--- completion
+|         |                        |    +--- QssCompletionContributor.kt
+|         |                        |    \--- QssPropertyInsertHandler.kt
+|         |                        |    
+|         |                        +--- editing
+|         |                        |    +--- QssBraceMatcher.kt
+|         |                        |    +--- QssCommenter.kt
+|         |                        |    +--- QssEnterHandler.kt
+|         |                        |    +--- QssQuoteHandler.kt
+|         |                        |    \--- QssTypedHandler.kt
+|         |                        |    
+|         |                        +--- highlighting
+|         |                        |    +--- ColorBoxIconRenderer.kt
+|         |                        |    +--- ColorHistoryManager.kt
+|         |                        |    +--- QssColorAnnotator.kt
+|         |                        |    +--- QssSyntaxHighlighter.kt
+|         |                        |    \--- QssSyntaxHighlighterFactory.kt
+|         |                        |    
+|         |                        +--- lexer
+|         |                        |    +--- QssLexer.kt
+|         |                        |    \--- QssTokenTypes.kt
+|         |                        |    
+|         |                        +--- palette
+|         |                        |    +--- QssColor.kt
+|         |                        |    +--- QssColorPalette.kt
+|         |                        |    +--- QssColorPaletteManager.kt
+|         |                        |    \--- QssColorPaletteToolWindowFactory.kt
+|         |                        |    
+|         |                        +--- parser
+|         |                        |    +--- QssParser.kt
+|         |                        |    \--- QssParserDefinition.kt
+|         |                        |    
+|         |                        +--- psi
+|         |                        |    +--- impl
+|         |                        |    |    \--- QssElementImpl.kt
+|         |                        |    |    
+|         |                        |    +--- QssElement.kt
+|         |                        |    +--- QssFile.kt
+|         |                        |    \--- QssTypes.kt
+|         |                        |    
+|         |                        +--- structure
+|         |                        |    +--- QssStructureViewElement.kt
+|         |                        |    +--- QssStructureViewFactory.kt
+|         |                        |    \--- QssStructureViewModel.kt
+|         |                        |    
+|         |                        +--- QssFileType.kt
+|         |                        +--- QssIcons.kt
+|         |                        \--- QssLanguage.kt
+|         |    
+|         \--- resources
+|              +--- fileTemplates
+|              |    \--- internal
+|              |         \--- QssFile.qss.ft
+|              |    
+|              \--- META-INF
+|                   +--- icons
+|                   |    \--- file_ico.png
+|                   |    
+|                   +--- plugin.xml
+|                   \--- pluginIcon.svg
+|    
++--- file-structure.txt
++--- gradle.properties
++--- gradlew
++--- README.md
+\--- Update-roadmap.md

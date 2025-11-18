@@ -11,21 +11,22 @@
 
         <h3>Key Features</h3>
         <ul>
+            <li><b>Complete Qt 6.10 Coverage</b> - Full support for all 96 QSS properties and 50 styleable widgets with Qt 5/6 backward compatibility</li>
+            <li><b>Advanced Selector Support</b> - 82 sub-controls (::handle, ::drop-down) and 44 pseudo-states (:hover, :checked) with intelligent chained syntax (QScrollBar::handle:vertical)</li>
+            <li><b>Smart Context-Aware Completion</b> - Relevant suggestions based on widget type - scrollbars show horizontal/vertical, checkboxes show checked/unchecked, with automatic popup triggers</li>
             <li><b>Professional Syntax Highlighting</b> - Enhanced color scheme with semantic separation for selectors, properties, keywords, and values</li>
-            <li><b>Smart Auto-Completion</b> - Auto-insert colons, close brackets, and suggest QSS functions (rgb, rgba, url, gradients)</li>
+            <li><b>Intelligent Auto-Completion</b> - Auto-insert colons, close brackets, CSS units (px, pt, em), and suggest QSS functions (rgb, rgba, url, gradients)</li>
             <li><b>Multiple Color Formats</b> - Full support for hex (#RRGGBB), RGB (rgb(r,g,b)), and RGBA (rgba(r,g,b,a)) colors</li>
             <li><b>Visual Color Picker</b> - Click gutter icons to edit colors with streamlined HSV, HSL, and RGB panels</li>
             <li><b>Format Preservation</b> - Automatically maintains your chosen color format (hex, RGB, or RGBA) when editing</li>
-            <li><b>Code Completion</b> - Context-aware suggestions for Qt widgets, properties, and CSS keywords</li>
             <li><b>Color Palettes</b> - Create and manage reusable color palettes for consistent styling</li>
-            <li><b>Structure View</b> - Navigate complex stylesheets with hierarchical selector and property views</li>
-            <li><b>Code Folding</b> - Collapse selector blocks and property groups for better readability</li>
+            <li><b>Code Navigation</b> - Structure view, code folding, and hierarchical selector navigation</li>
         </ul>
 
         <h3>Works Everywhere</h3>
         <p>Compatible with all JetBrains IDEs - no language-specific dependencies required:</p>
         <ul>
-            <li><b>CLion</b> - C++ Qt development</li>
+            <li><b>CLion</b> - C++ Qt development (no Python dependency!)</li>
             <li><b>PyCharm</b> - Python Qt (PySide6, PyQt6, PySide2, PyQt5)</li>
             <li><b>IntelliJ IDEA</b> - Java Qt (QtJambi)</li>
             <li><b>WebStorm</b> - Qt for WebAssembly projects</li>
@@ -34,7 +35,7 @@
         </ul>
 
         <h3>Quick Start</h3>
-        <p>Install the plugin and open any .qss file. All features work immediately with no configuration needed.</p>
+        <p>Install the plugin and open any .qss file. All features work immediately with no configuration needed. Use Ctrl+Space for intelligent completion suggestions.</p>
     ]]></description>
 
   <!-- Product and plugin compatibility requirements -->

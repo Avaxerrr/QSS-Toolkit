@@ -1,12 +1,15 @@
 /*
  * ${NAME} - Qt Style Sheet
  * Created: ${DATE}
+ *
+ * QSS Toolkit Quick Tips:
+ * - Press Ctrl+Space (Cmd+Space) for intelligent auto-completion
+ * - Use Ctrl+/ (Cmd+/) to comment/uncomment code blocks
+ * - Click color gutter icons to open the visual color picker
+ * - Type :: for sub-controls (e.g., QScrollBar::handle)
+ * - Type : for pseudo-states (e.g., QPushButton:hover)
+ * - RGB/RGBA colors: rgb(255, 0, 0) or rgba(255, 0, 0, 128)
  */
 
-/* Base styling */
-QWidget {
-    background-color: #f0f0f0;
-    color: #333333;
-}
-
 /* Add your QSS styles here */
+

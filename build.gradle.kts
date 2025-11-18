@@ -45,6 +45,11 @@ intellijPlatform {
     changeNotes = """
             <h3>Version xx (DON'T TOUCH THIS I WILL DECIDED WHICH VERSION TO PUT HERE) - November 2025</h3>
             <ul>
+                <li><b>Complete Qt 6.10 Support:</b> All 96 properties and 50 widgets with full Qt 5/6 backward compatibility</li>
+                <li><b>Advanced Selector Support:</b> 82 sub-controls (QScrollBar::handle) and 44 pseudo-states with intelligent chained syntax (QScrollBar::handle:vertical)</li>
+                <li><b>Smart Context-Aware Completion:</b> Relevant suggestions based on widget type - scrollbars show horizontal/vertical, checkboxes show checked/unchecked</li>
+                <li><b>Instant Value Suggestions:</b> Auto-complete for CSS units (px, pt, em), colors, alignments, and border styles</li>
+                <li><b>Professional Auto-Trigger:</b> Automatic completion popup after :: and : for effortless workflow</li>
                 <li><b>Smart Editing Features:</b> Professional auto-completion and formatting</li>
                 <li><b>Comment Toggle:</b> Ctrl+/ (Cmd+/) to quickly comment/uncomment QSS code blocks</li>
                 <li><b>Auto-Close Brackets:</b> Automatic insertion of closing braces, parentheses, and brackets</li>
