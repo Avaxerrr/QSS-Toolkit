@@ -7,35 +7,85 @@ package io.github.avaxerrr.qsstoolkit.completion
  * Used by both CompletionContributor (for suggestions) and ValidationAnnotator (for error checking).
  */
 object QssData {
-    // Complete list of Qt 6.10 Style Sheet Properties (96 properties)
-    val PROPERTIES = listOf(
-        "accent-color", "alternate-background-color", "selection-background-color", "selection-color",
-        "background", "background-attachment", "background-clip", "background-color", "background-image",
+
+    // Enum to define the expected type of value for validation
+    enum class PropertyType {
+        COLOR,
+        MEASUREMENT, // Requires unit (px, pt) or 0
+        NUMBER,      // Raw number (opacity)
+        STRING,      // Generic text or specific enums
+        URL,
+        BORDER       // Complex (width style color)
+    }
+
+    // Map properties to their expected value types
+    val PROPERTY_TYPES = mapOf(
+        "accent-color" to PropertyType.COLOR,
+        "alternate-background-color" to PropertyType.COLOR,
+        "background" to PropertyType.COLOR, // Simplified for now
+        "background-color" to PropertyType.COLOR,
+        "background-image" to PropertyType.URL,
+        "border-image" to PropertyType.URL,
+        "image" to PropertyType.URL,
+        "icon" to PropertyType.URL,
+        "border" to PropertyType.BORDER,
+        "border-color" to PropertyType.COLOR,
+        "border-radius" to PropertyType.MEASUREMENT,
+        "border-width" to PropertyType.MEASUREMENT,
+        "bottom" to PropertyType.MEASUREMENT,
+        "color" to PropertyType.COLOR,
+        "font-size" to PropertyType.MEASUREMENT,
+        "height" to PropertyType.MEASUREMENT,
+        "icon-size" to PropertyType.MEASUREMENT,
+        "left" to PropertyType.MEASUREMENT,
+        "margin" to PropertyType.MEASUREMENT,
+        "margin-bottom" to PropertyType.MEASUREMENT,
+        "margin-left" to PropertyType.MEASUREMENT,
+        "margin-right" to PropertyType.MEASUREMENT,
+        "margin-top" to PropertyType.MEASUREMENT,
+        "max-height" to PropertyType.MEASUREMENT,
+        "max-width" to PropertyType.MEASUREMENT,
+        "min-height" to PropertyType.MEASUREMENT,
+        "min-width" to PropertyType.MEASUREMENT,
+        "opacity" to PropertyType.NUMBER,
+        "padding" to PropertyType.MEASUREMENT,
+        "padding-bottom" to PropertyType.MEASUREMENT,
+        "padding-left" to PropertyType.MEASUREMENT,
+        "padding-right" to PropertyType.MEASUREMENT,
+        "padding-top" to PropertyType.MEASUREMENT,
+        "right" to PropertyType.MEASUREMENT,
+        "selection-background-color" to PropertyType.COLOR,
+        "selection-color" to PropertyType.COLOR,
+        "spacing" to PropertyType.MEASUREMENT,
+        "top" to PropertyType.MEASUREMENT,
+        "width" to PropertyType.MEASUREMENT
+    )
+
+    // Keep the original list for backward compatibility and iteration
+    val PROPERTIES = PROPERTY_TYPES.keys.toList() + listOf(
+        "background-attachment", "background-clip",
         "background-origin", "background-position", "background-repeat",
-        "border", "border-bottom", "border-bottom-color", "border-bottom-left-radius",
-        "border-bottom-right-radius", "border-bottom-style", "border-bottom-width", "border-color",
-        "border-image", "border-left", "border-left-color", "border-left-style", "border-left-width",
-        "border-radius", "border-right", "border-right-color", "border-right-style", "border-right-width",
+        "border-bottom", "border-bottom-color", "border-bottom-left-radius",
+        "border-bottom-right-radius", "border-bottom-style", "border-bottom-width",
+        "border-left", "border-left-color", "border-left-style", "border-left-width",
+        "border-right", "border-right-color", "border-right-style", "border-right-width",
         "border-style", "border-top", "border-top-color", "border-top-left-radius", "border-top-right-radius",
-        "border-top-style", "border-top-width", "border-width",
-        "bottom", "left", "position", "right", "top",
-        "button-layout", "dialogbuttonbox-buttons-have-icons",
-        "color", "placeholder-text-color",
-        "font", "font-family", "font-size", "font-style", "font-weight", "letter-spacing",
-        "gridline-color", "icon", "icon-size", "image", "image-position",
+        "border-top-style", "border-top-width",
+        "position", "button-layout", "dialogbuttonbox-buttons-have-icons",
+        "placeholder-text-color",
+        "font", "font-family", "font-style", "font-weight", "letter-spacing",
+        "gridline-color", "image-position",
         "lineedit-password-character", "lineedit-password-mask-delay",
-        "height", "max-height", "max-width", "min-height", "min-width", "width",
-        "margin", "margin-bottom", "margin-left", "margin-right", "margin-top",
-        "messagebox-text-interaction-flags", "opacity",
+        "messagebox-text-interaction-flags",
         "outline", "outline-bottom-left-radius", "outline-bottom-right-radius", "outline-color",
         "outline-offset", "outline-radius", "outline-style", "outline-top-left-radius", "outline-top-right-radius",
-        "padding", "padding-bottom", "padding-left", "padding-right", "padding-top",
         "paint-alternating-row-colors-for-empty-area", "show-decoration-selected",
-        "spacing", "subcontrol-origin", "subcontrol-position",
+        "subcontrol-origin", "subcontrol-position",
         "text-align", "text-decoration", "titlebar-show-tooltips-on-buttons", "widget-animation-duration"
     )
 
-    // Complete list of styleable Qt widgets (50 widgets)
+    // ... [Keep remaining lists same as before] ...
+    // Complete list of styleable Qt widgets
     val WIDGET_SELECTORS = listOf(
         "QAbstractButton", "QAbstractItemView", "QAbstractScrollArea",
         "QCheckBox", "QCommandLinkButton", "QComboBox", "QPushButton", "QRadioButton",

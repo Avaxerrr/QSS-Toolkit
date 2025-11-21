@@ -1,5 +1,3 @@
-// QSS Toolkit version 1.1
-
 package io.github.avaxerrr.qsstoolkit.highlighting
 
 import com.intellij.lexer.Lexer
@@ -19,12 +17,15 @@ class QssSyntaxHighlighter : SyntaxHighlighterBase() {
     override fun getTokenHighlights(tokenType: IElementType): Array<TextAttributesKey> {
         val attributes = when (tokenType) {
             QssTokenTypes.COMMENT -> QSS_COMMENT
-            QssTokenTypes.IDENTIFIER -> QSS_IDENTIFIER
-            QssTokenTypes.KEYWORD -> QSS_KEYWORD
-            QssTokenTypes.STRING -> QSS_STRING
+            QssTokenTypes.IDENTIFIER -> QSS_IDENTIFIER // Default properties (Blue)
+            QssTokenTypes.WIDGET_CLASS -> QSS_WIDGET // Widgets (Teal)
+            QssTokenTypes.KEYWORD -> QSS_KEYWORD // Keywords (Orange)
+            QssTokenTypes.STRING -> QSS_STRING // Strings (Green)
+            QssTokenTypes.URL -> QSS_STRING // URLs (Green)
+            QssTokenTypes.TEMPLATE_TAG -> QSS_TEMPLATE // Templates (Orange/Keyword color)
             QssTokenTypes.NUMBER -> QSS_NUMBER
             QssTokenTypes.HEX_COLOR -> QSS_COLOR
-            QssTokenTypes.RGB_FUNCTION, QssTokenTypes.RGBA_FUNCTION -> QSS_COLOR
+            QssTokenTypes.RGB_FUNCTION, QssTokenTypes.RGBA_FUNCTION, QssTokenTypes.GRADIENT -> QSS_COLOR
             QssTokenTypes.HASH -> QSS_ID_SELECTOR
             QssTokenTypes.DOT -> QSS_CLASS_SELECTOR
             QssTokenTypes.ASTERISK -> QSS_IDENTIFIER
@@ -33,8 +34,8 @@ class QssSyntaxHighlighter : SyntaxHighlighterBase() {
             QssTokenTypes.LPAREN, QssTokenTypes.RPAREN,
             QssTokenTypes.LBRACE, QssTokenTypes.RBRACE,
             QssTokenTypes.LBRACKET, QssTokenTypes.RBRACKET,
-            QssTokenTypes.EQUALS, QssTokenTypes.GT, QssTokenTypes.EXCLAMATION,  // ADD THESE
-            QssTokenTypes.SLASH,  // ADD THIS
+            QssTokenTypes.EQUALS, QssTokenTypes.GT, QssTokenTypes.EXCLAMATION,
+            QssTokenTypes.SLASH,
             QssTokenTypes.SEMICOLON, QssTokenTypes.COLON, QssTokenTypes.COMMA -> QSS_PUNCTUATION
             QssTokenTypes.BAD_CHARACTER -> QSS_BAD_CHARACTER
             else -> return emptyArray()
@@ -53,13 +54,15 @@ class QssSyntaxHighlighter : SyntaxHighlighterBase() {
         // Widget names and property names (background-color, padding) - cyan/teal
         val QSS_IDENTIFIER = TextAttributesKey.createTextAttributesKey(
             "QSS_IDENTIFIER",
-            DefaultLanguageHighlighterColors.INSTANCE_METHOD  // Cyan/teal for property names
+            DefaultLanguageHighlighterColors.INSTANCE_METHOD
         )
-
-        // Keywords (transparent, solid, bold, none, etc.) - orange/amber
+        val QSS_WIDGET = TextAttributesKey.createTextAttributesKey(
+            "QSS_WIDGET",
+            DefaultLanguageHighlighterColors.STATIC_FIELD
+        )
         val QSS_KEYWORD = TextAttributesKey.createTextAttributesKey(
             "QSS_KEYWORD",
-            DefaultLanguageHighlighterColors.KEYWORD  // Bold orange/purple for keywords
+            DefaultLanguageHighlighterColors.KEYWORD
         )
 
         // String values - green
@@ -67,41 +70,43 @@ class QssSyntaxHighlighter : SyntaxHighlighterBase() {
             "QSS_STRING",
             DefaultLanguageHighlighterColors.STRING
         )
-
-        // Numeric values (10px, 5em, 0.5) - light green/orange (distinct from purple)
+        val QSS_TEMPLATE = TextAttributesKey.createTextAttributesKey(
+            "QSS_TEMPLATE",
+            DefaultLanguageHighlighterColors.KEYWORD
+        )
         val QSS_NUMBER = TextAttributesKey.createTextAttributesKey(
             "QSS_NUMBER",
-            DefaultLanguageHighlighterColors.NUMBER  // Light green/orange instead of purple
+            DefaultLanguageHighlighterColors.NUMBER
         )
 
         // Hex color values (#FF0000) - purple/magenta
         val QSS_COLOR = TextAttributesKey.createTextAttributesKey(
             "QSS_COLOR",
-            DefaultLanguageHighlighterColors.CONSTANT  // Purple for hex colors
+            DefaultLanguageHighlighterColors.CONSTANT
         )
 
         // ID selectors (#myButton) - gold/yellow (changed from purple)
         val QSS_ID_SELECTOR = TextAttributesKey.createTextAttributesKey(
             "QSS_ID_SELECTOR",
-            DefaultLanguageHighlighterColors.STATIC_FIELD  // Gold/yellow for ID selectors
+            DefaultLanguageHighlighterColors.STATIC_FIELD
         )
 
         // Class selectors (.myClass) - gold/yellow (changed from purple)
         val QSS_CLASS_SELECTOR = TextAttributesKey.createTextAttributesKey(
             "QSS_CLASS_SELECTOR",
-            DefaultLanguageHighlighterColors.STATIC_FIELD  // Same gold/yellow as ID
+            DefaultLanguageHighlighterColors.STATIC_FIELD
         )
 
         // Pseudo-states (:hover, :pressed) - keep yellow
         val QSS_PSEUDO_STATE = TextAttributesKey.createTextAttributesKey(
             "QSS_PSEUDO_STATE",
-            DefaultLanguageHighlighterColors.METADATA  // Yellow for pseudo-states
+            DefaultLanguageHighlighterColors.METADATA
         )
 
         // Pseudo-elements (::item, ::indicator) - keep yellow
         val QSS_PSEUDO_ELEMENT = TextAttributesKey.createTextAttributesKey(
             "QSS_PSEUDO_ELEMENT",
-            DefaultLanguageHighlighterColors.METADATA  // Yellow for pseudo-elements
+            DefaultLanguageHighlighterColors.METADATA
         )
 
         // Punctuation (braces, semicolons, etc.)

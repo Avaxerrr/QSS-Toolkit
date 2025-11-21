@@ -17,7 +17,6 @@ class QssLexer : LexerBase() {
 
     companion object {
         // QSS keyword values (property values that are predefined)
-        // REMOVED: border, padding, margin, top, bottom, left, right, center, middle
         // These are primarily property names, not values
         private val KEYWORDS = setOf(
             // Border styles
@@ -78,24 +77,26 @@ class QssLexer : LexerBase() {
                 scanWhitespace()
                 currentToken = QssTokenTypes.WHITE_SPACE
             }
+            // Handle Template Tags {{...}}
+            buffer[currentPosition] == '{' && currentPosition + 1 < bufferEnd &&
+                    buffer[currentPosition + 1] == '{' -> {
+                scanTemplateTag()
+                currentToken = QssTokenTypes.TEMPLATE_TAG
+            }
             // Handle double-colon pseudo-elements (::item)
             buffer[currentPosition] == ':' && currentPosition + 1 < bufferEnd &&
                     buffer[currentPosition + 1] == ':' -> {
                 currentPosition += 2 // Skip the ::
-
-                // Check if there's an identifier following (like in ::item)
                 if (currentPosition < bufferEnd && isIdentifierStart(buffer[currentPosition])) {
                     scanIdentifier()
                     currentToken = QssTokenTypes.PSEUDO_ELEMENT
                 } else {
-                    currentToken = QssTokenTypes.COLON // Fallback if no identifier
+                    currentToken = QssTokenTypes.COLON
                 }
             }
             // Handle single-colon pseudo-states (:hover, :active)
             buffer[currentPosition] == ':' -> {
                 currentPosition++ // Skip the :
-
-                // Check if there's an identifier following (like in :hover)
                 if (currentPosition < bufferEnd && isIdentifierStart(buffer[currentPosition])) {
                     scanIdentifier()
                     currentToken = QssTokenTypes.PSEUDO_STATE
@@ -103,13 +104,13 @@ class QssLexer : LexerBase() {
                     currentToken = QssTokenTypes.COLON
                 }
             }
-            // UPDATED: Handle comments - must check for // or /* specifically
+            // Handle comments
             buffer[currentPosition] == '/' && currentPosition + 1 < bufferEnd &&
                     (buffer[currentPosition + 1] == '/' || buffer[currentPosition + 1] == '*') -> {
                 scanComment()
                 currentToken = QssTokenTypes.COMMENT
             }
-            // Handle standalone slash (for paths)
+            // Handle standalone slash
             buffer[currentPosition] == '/' -> {
                 currentPosition++
                 currentToken = QssTokenTypes.SLASH
@@ -150,12 +151,10 @@ class QssLexer : LexerBase() {
                 currentPosition++
                 currentToken = QssTokenTypes.EQUALS
             }
-            // Child combinator
             buffer[currentPosition] == '>' -> {
                 currentPosition++
                 currentToken = QssTokenTypes.GT
             }
-            // Negation operator
             buffer[currentPosition] == '!' -> {
                 currentPosition++
                 currentToken = QssTokenTypes.EXCLAMATION
@@ -175,7 +174,6 @@ class QssLexer : LexerBase() {
                 scanString()
                 currentToken = QssTokenTypes.STRING
             }
-            // Handle numbers (including decimals and with units)
             isDigit(buffer[currentPosition]) ||
                     (buffer[currentPosition] == '-' && currentPosition + 1 < bufferEnd &&
                             isDigit(buffer[currentPosition + 1])) -> {
@@ -185,24 +183,29 @@ class QssLexer : LexerBase() {
             isIdentifierStart(buffer[currentPosition]) -> {
                 val start = currentPosition
                 scanIdentifier()
-                val text = buffer.substring(start, currentPosition).lowercase()
+                val text = buffer.substring(start, currentPosition) // Keep case for check
+                val lowerText = text.lowercase()
 
-                // Check if it's a color function (rgb or rgba)
-                if ((text == "rgb" || text == "rgba") &&
-                    currentPosition < bufferEnd && buffer[currentPosition] == '(') {
-
-                    // Scan the entire function including parentheses and contents
-                    scanColorFunction()
-
-                    currentToken = if (text == "rgb") {
-                        QssTokenTypes.RGB_FUNCTION
+                // Check for Functions
+                if (currentPosition < bufferEnd && buffer[currentPosition] == '(') {
+                    if (lowerText == "url") {
+                        scanUrl()
+                        currentToken = QssTokenTypes.URL
+                    } else if (lowerText == "rgb" || lowerText == "rgba") {
+                        scanParenthesisBlock()
+                        currentToken = if (lowerText == "rgb") QssTokenTypes.RGB_FUNCTION else QssTokenTypes.RGBA_FUNCTION
+                    } else if (lowerText.startsWith("q") && lowerText.endsWith("gradient")) {
+                        scanParenthesisBlock()
+                        currentToken = QssTokenTypes.GRADIENT
                     } else {
-                        QssTokenTypes.RGBA_FUNCTION
+                        currentToken = QssTokenTypes.IDENTIFIER
                     }
                 }
-                // Check if it's a keyword
-                else if (KEYWORDS.contains(text)) {
+                else if (KEYWORDS.contains(lowerText)) {
                     currentToken = QssTokenTypes.KEYWORD
+                } else if (text.isNotEmpty() && text[0].isUpperCase()) {
+                    // Separate Widgets (Capitalized) from Properties (lowercase)
+                    currentToken = QssTokenTypes.WIDGET_CLASS
                 } else {
                     currentToken = QssTokenTypes.IDENTIFIER
                 }
@@ -216,12 +219,23 @@ class QssLexer : LexerBase() {
         tokenEnd = currentPosition
     }
 
-    // Scan rgb(...) or rgba(...) functions
-    private fun scanColorFunction() {
-        // We're at the opening parenthesis
-        if (currentPosition < bufferEnd && buffer[currentPosition] == '(') {
-            currentPosition++ // Skip '('
+    // Scans {{...}}
+    private fun scanTemplateTag() {
+        currentPosition += 2 // Skip {{
+        while (currentPosition + 1 < bufferEnd) {
+            if (buffer[currentPosition] == '}' && buffer[currentPosition + 1] == '}') {
+                currentPosition += 2
+                return
+            }
+            currentPosition++
+        }
+        // If EOF reached without closing, just consume until end
+        currentPosition = bufferEnd
+    }
 
+    private fun scanParenthesisBlock() {
+        if (currentPosition < bufferEnd && buffer[currentPosition] == '(') {
+            currentPosition++
             var depth = 1
             while (currentPosition < bufferEnd && depth > 0) {
                 when (buffer[currentPosition]) {
@@ -229,11 +243,23 @@ class QssLexer : LexerBase() {
                     ')' -> {
                         depth--
                         if (depth == 0) {
-                            currentPosition++ // Include the closing ')'
+                            currentPosition++
                             return
                         }
                     }
                 }
+                currentPosition++
+            }
+        }
+    }
+
+    private fun scanUrl() {
+        if (currentPosition < bufferEnd && buffer[currentPosition] == '(') {
+            currentPosition++
+            while (currentPosition < bufferEnd && buffer[currentPosition] != ')') {
+                currentPosition++
+            }
+            if (currentPosition < bufferEnd && buffer[currentPosition] == ')') {
                 currentPosition++
             }
         }
@@ -248,42 +274,32 @@ class QssLexer : LexerBase() {
     private fun scanComment() {
         if (buffer[currentPosition] == '/' && currentPosition + 1 < bufferEnd) {
             if (buffer[currentPosition + 1] == '/') {
-                // Line comment
                 currentPosition += 2
                 while (currentPosition < bufferEnd && buffer[currentPosition] != '\n') {
                     currentPosition++
                 }
-                if (currentPosition < bufferEnd) {
-                    currentPosition++ // Include the newline
-                }
+                if (currentPosition < bufferEnd) currentPosition++
             } else if (buffer[currentPosition + 1] == '*') {
-                // Block comment
                 currentPosition += 2
                 while (currentPosition + 1 < bufferEnd &&
                     !(buffer[currentPosition] == '*' && buffer[currentPosition + 1] == '/')) {
                     currentPosition++
                 }
-                if (currentPosition + 1 < bufferEnd) {
-                    currentPosition += 2 // Include the */
-                }
+                if (currentPosition + 1 < bufferEnd) currentPosition += 2
             }
         }
     }
 
     private fun scanHashOrColor() {
-        currentPosition++ // Skip the #
+        currentPosition++
         val start = currentPosition
-
-        // Check if it's a color
         while (currentPosition < bufferEnd && isHexDigit(buffer[currentPosition])) {
             currentPosition++
         }
-
         val length = currentPosition - start
         if (length == 3 || length == 6 || length == 8) {
             currentToken = QssTokenTypes.HEX_COLOR
         } else {
-            // It's an ID selector - scan the rest as identifier
             while (currentPosition < bufferEnd &&
                 (isIdentifierPart(buffer[currentPosition]) || buffer[currentPosition] == '-')) {
                 currentPosition++
@@ -293,7 +309,7 @@ class QssLexer : LexerBase() {
     }
 
     private fun scanDotSelector() {
-        currentPosition++ // Skip the .
+        currentPosition++
         while (currentPosition < bufferEnd &&
             (isIdentifierPart(buffer[currentPosition]) || buffer[currentPosition] == '-')) {
             currentPosition++
@@ -302,50 +318,29 @@ class QssLexer : LexerBase() {
 
     private fun scanString() {
         val quote = buffer[currentPosition]
-        currentPosition++ // Skip the opening quote
-
+        currentPosition++
         while (currentPosition < bufferEnd && buffer[currentPosition] != quote) {
             if (buffer[currentPosition] == '\\' && currentPosition + 1 < bufferEnd) {
-                // Skip escaped characters
                 currentPosition += 2
             } else {
                 currentPosition++
             }
         }
-
-        if (currentPosition < bufferEnd) {
-            currentPosition++ // Skip the closing quote
-        }
+        if (currentPosition < bufferEnd) currentPosition++
     }
 
-    // Scan numbers including % as part of the number token
     private fun scanNumber() {
-        // Handle optional negative sign
-        if (buffer[currentPosition] == '-') {
-            currentPosition++
-        }
-
-        // Scan integer part
-        while (currentPosition < bufferEnd && isDigit(buffer[currentPosition])) {
-            currentPosition++
-        }
-
-        // Handle decimal point and fractional part
+        if (buffer[currentPosition] == '-') currentPosition++
+        while (currentPosition < bufferEnd && isDigit(buffer[currentPosition])) currentPosition++
         if (currentPosition < bufferEnd && buffer[currentPosition] == '.' &&
             currentPosition + 1 < bufferEnd && isDigit(buffer[currentPosition + 1])) {
-            currentPosition++ // Skip the decimal point
-            while (currentPosition < bufferEnd && isDigit(buffer[currentPosition])) {
-                currentPosition++
-            }
+            currentPosition++
+            while (currentPosition < bufferEnd && isDigit(buffer[currentPosition])) currentPosition++
         }
-
-        // Handle percentage FIRST before checking for letter units
         if (currentPosition < bufferEnd && buffer[currentPosition] == '%') {
-            currentPosition++ // Include the % as part of the number token
+            currentPosition++
             return
         }
-
-        // Handle other units (px, em, pt, etc.)
         if (currentPosition < bufferEnd && isIdentifierStart(buffer[currentPosition])) {
             while (currentPosition < bufferEnd && buffer[currentPosition].isLetterOrDigit()) {
                 currentPosition++
@@ -361,16 +356,10 @@ class QssLexer : LexerBase() {
     }
 
     private fun isWhitespace(c: Char): Boolean = c.isWhitespace()
-
     private fun isDigit(c: Char): Boolean = c in '0'..'9'
-
     private fun isIdentifierStart(c: Char): Boolean = c.isLetter() || c == '_'
-
     private fun isIdentifierPart(c: Char): Boolean = c.isLetterOrDigit() || c == '_' || c == '-'
-
     private fun isHexDigit(c: Char): Boolean = c in '0'..'9' || c in 'a'..'f' || c in 'A'..'F'
-
     override fun getBufferSequence(): CharSequence = buffer
-
     override fun getBufferEnd(): Int = bufferEnd
 }

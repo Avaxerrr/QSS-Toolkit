@@ -47,29 +47,41 @@ intellijPlatform {
             <ul>
                 <li><b>Complete Qt 6.10 Support:</b> All 96 properties and 50 widgets with full Qt 5/6 backward compatibility</li>
                 <li><b>Advanced Selector Support:</b> 82 sub-controls (QScrollBar::handle) and 44 pseudo-states with intelligent chained syntax (QScrollBar::handle:vertical)</li>
+                <li><b>Robust Error Detection:</b>
+                    <ul>
+                        <li><b>Real-time Validation:</b> Detects invalid properties, unknown values, and incorrect units on the fly</li>
+                        <li><b>Smart Parser Recovery:</b> Correctly handles missing braces without cascading errors to the rest of the file</li>
+                        <li><b>Type Safety:</b> Validates measurements (px, pt), colors, and URLs to prevent silent failures</li>
+                    </ul>
+                </li>
+                <li><b>Template & Dynamic Value Support:</b> First-class support for template tags like <code>{{VARIABLE}}</code>—perfect for Python/C++ template engines</li>
                 <li><b>Smart Context-Aware Completion:</b> Relevant suggestions based on widget type - scrollbars show horizontal/vertical, checkboxes show checked/unchecked</li>
+                <li><b>Enhanced Syntax Highlighting:</b>
+                    <ul>
+                        <li><b>Semantic Coloring:</b> Distinct colors for Widgets (Teal), Properties (Blue), Keywords (Orange), and Templates</li>
+                        <li><b>URL & Gradient Support:</b> Proper highlighting for <code>url(...)</code> paths and Qt gradient functions</li>
+                        <li><b>Improved Tokenization:</b> Numbers with units and CSS keywords are now visually distinct</li>
+                    </ul>
+                </li>
                 <li><b>Instant Value Suggestions:</b> Auto-complete for CSS units (px, pt, em), colors, alignments, and border styles</li>
                 <li><b>Professional Auto-Trigger:</b> Automatic completion popup after :: and : for effortless workflow</li>
-                <li><b>Smart Editing Features:</b> Professional auto-completion and formatting</li>
-                <li><b>Comment Toggle:</b> Ctrl+/ (Cmd+/) to quickly comment/uncomment QSS code blocks</li>
-                <li><b>Auto-Close Brackets:</b> Automatic insertion of closing braces, parentheses, and brackets</li>
-                <li><b>Smart Indentation:</b> Automatic indentation when creating new blocks with proper formatting</li>
-                <li><b>Quote Completion:</b> Auto-closes quotes for string values</li>
-                <li><b>Bracket Matching:</b> Highlights matching braces, parentheses, and brackets</li>
-                <li><b>Smart Enter Key:</b> Pressing Enter between braces creates properly indented block</li>
-                <li><b>Property Completion:</b> Auto-inserts colon and space after accepting property suggestions</li>
-                <li><b>Function Completions:</b> Added rgb() and rgba() color functions</li>
-                <li><b>Resource Functions:</b> Added url() for images and qlineargradient(), qradialgradient(), qconicalgradient() for Qt gradients</li>
-                <li><b>Context-Aware Suggestions:</b> Right functions suggested for the right properties</li>
-                <li><b>Enhanced Syntax Highlighting:</b> Professional color scheme with proper semantic separation</li>
-                <li><b>Improved Number Highlighting:</b> Numbers with units (px, em, %, pt) now properly tokenized and colored</li>
-                <li><b>Keyword Recognition:</b> CSS keywords (transparent, solid, bold, etc.) now distinct from identifiers</li>
-                <li><b>Better Selector Colors:</b> ID/class selectors visually distinct from property values</li>
-                <li><b>RGB/RGBA Support:</b> Full support for rgb() and rgba() color functions with gutter previews</li>
-                <li><b>Format Preservation:</b> Color picker preserves original format (hex, RGB, or RGBA)</li>
-                <li><b>Streamlined Color Picker:</b> Removed CMYK and Swatches tabs, remembers your preferred mode</li>
-                <li><b>Universal IDE Support:</b> Works in ALL JetBrains IDEs (CLion, PyCharm, IntelliJ, WebStorm, Rider, etc.)</li>
-                <li><b>No Python Dependency:</b> Perfect for C++ Qt developers in CLion - no Python required!</li>
+                <li><b>Smart Editing Features:</b>
+                    <ul>
+                        <li><b>Auto-Close Brackets & Quotes:</b> Automatic insertion of closing characters</li>
+                        <li><b>Smart Indentation:</b> Enter key creates properly formatted, indented blocks</li>
+                        <li><b>Comment Toggle:</b> Ctrl+/ (Cmd+/) support</li>
+                        <li><b>Bracket Matching:</b> Visual highlighting of matching pairs</li>
+                        <li><b>Property Completion:</b> Auto-inserts colon and space for faster typing</li>
+                    </ul>
+                </li>
+                <li><b>Advanced Color Tools:</b>
+                    <ul>
+                        <li><b>RGB/RGBA Support:</b> Full support with gutter previews and format preservation</li>
+                        <li><b>Streamlined Color Picker:</b> Optimized UI that remembers your preferred mode</li>
+                        <li><b>Gradient Recognition:</b> Support for <code>qlineargradient()</code>, <code>qradialgradient()</code>, and <code>qconicalgradient()</code></li>
+                    </ul>
+                </li>
+                <li><b>Universal IDE Support:</b> Works in ALL JetBrains IDEs (CLion, PyCharm, IntelliJ, WebStorm, Rider, etc.) with NO Python dependency</li>
             </ul>
             
             <h3>Version 1.1 - April 2025</h3>

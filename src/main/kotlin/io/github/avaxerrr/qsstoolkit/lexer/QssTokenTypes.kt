@@ -36,10 +36,13 @@ interface QssTokenTypes {
         val NUMBER = QssElementType("NUMBER")
         val HEX_COLOR = QssElementType("HEX_COLOR")
         val KEYWORD = QssElementType("KEYWORD")
+        val URL = QssElementType("URL") // url(...)
+        val TEMPLATE_TAG = QssElementType("TEMPLATE_TAG") // {{...}}
 
         // Color functions
         val RGB_FUNCTION = QssElementType("RGB_FUNCTION")    // rgb(...)
         val RGBA_FUNCTION = QssElementType("RGBA_FUNCTION")  // rgba(...)
+        val GRADIENT = QssElementType("GRADIENT")            // qlineargradient(...)
 
         // Special selectors
         val HASH = QssElementType("HASH") // #
@@ -47,6 +50,9 @@ interface QssTokenTypes {
         val ASTERISK = QssElementType("ASTERISK") // *
         val PSEUDO_STATE = QssElementType("PSEUDO_STATE") // :hover, etc.
         val PSEUDO_ELEMENT = QssElementType("PSEUDO_ELEMENT") // ::item, etc.
+
+        // Widget Class (e.g. QPushButton) - identified by Uppercase start
+        val WIDGET_CLASS = QssElementType("WIDGET_CLASS")
 
         // Invalid or unexpected token
         val BAD_CHARACTER = TokenType.BAD_CHARACTER
