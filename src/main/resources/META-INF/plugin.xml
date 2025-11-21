@@ -111,6 +111,10 @@
 
     <!-- File template for creating new QSS files -->
     <internalFileTemplate name="QssFile"/>
+
+    <!-- Validation annotator -->
+    <annotator language="QSS" implementationClass="io.github.avaxerrr.qsstoolkit.validation.QssValidationAnnotator"/>
+
   </extensions>
 
   <actions>

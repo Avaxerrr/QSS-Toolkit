@@ -3,17 +3,12 @@
 package io.github.avaxerrr.qsstoolkit.completion
 
 import com.intellij.codeInsight.completion.*
-import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.util.ProcessingContext
 import io.github.avaxerrr.qsstoolkit.QssLanguage
 import io.github.avaxerrr.qsstoolkit.lexer.QssTokenTypes
-import io.github.avaxerrr.qsstoolkit.psi.QssDeclaration
-import io.github.avaxerrr.qsstoolkit.psi.QssFile
-import io.github.avaxerrr.qsstoolkit.psi.QssTypes
 import com.intellij.psi.PsiElement
-
 
 class QssCompletionContributor : CompletionContributor() {
 
@@ -85,7 +80,7 @@ class QssCompletionContributor : CompletionContributor() {
             resultSet: CompletionResultSet
         ) {
             // Add widget selectors
-            WIDGET_SELECTORS.forEach { widget ->
+            QssData.WIDGET_SELECTORS.forEach { widget ->
                 resultSet.addElement(
                     LookupElementBuilder.create(widget)
                         .withTypeText("Widget Selector")
@@ -94,7 +89,7 @@ class QssCompletionContributor : CompletionContributor() {
             }
 
             // Add properties
-            PROPERTIES.forEach { property ->
+            QssData.PROPERTIES.forEach { property ->
                 resultSet.addElement(
                     LookupElementBuilder.create(property)
                         .withTypeText("Property")
@@ -114,9 +109,9 @@ class QssCompletionContributor : CompletionContributor() {
             val fileText = parameters.originalFile.text
             val currentWidget = findCurrentWidget(fileText, parameters.offset)
 
-            if (currentWidget != null && WIDGET_SUBCONTROLS.containsKey(currentWidget)) {
+            if (currentWidget != null && QssData.WIDGET_SUBCONTROLS.containsKey(currentWidget)) {
                 // Add sub-controls specific to this widget
-                WIDGET_SUBCONTROLS[currentWidget]?.forEach { subcontrol ->
+                QssData.WIDGET_SUBCONTROLS[currentWidget]?.forEach { subcontrol ->
                     resultSet.addElement(
                         LookupElementBuilder.create(subcontrol.removePrefix("::"))
                             .withPresentableText(subcontrol)
@@ -126,7 +121,7 @@ class QssCompletionContributor : CompletionContributor() {
                 }
             } else {
                 // Add all common sub-controls if we can't determine the widget
-                COMMON_SUBCONTROLS.forEach { subcontrol ->
+                QssData.COMMON_SUBCONTROLS.forEach { subcontrol ->
                     resultSet.addElement(
                         LookupElementBuilder.create(subcontrol.removePrefix("::"))
                             .withPresentableText(subcontrol)
@@ -154,9 +149,9 @@ class QssCompletionContributor : CompletionContributor() {
                 if (textBefore.contains("::")) {
                     val currentWidget = findCurrentWidget(fileText, offset)
 
-                    if (currentWidget != null && WIDGET_SUBCONTROLS.containsKey(currentWidget)) {
+                    if (currentWidget != null && QssData.WIDGET_SUBCONTROLS.containsKey(currentWidget)) {
                         // Add sub-controls specific to this widget
-                        WIDGET_SUBCONTROLS[currentWidget]?.forEach { subcontrol ->
+                        QssData.WIDGET_SUBCONTROLS[currentWidget]?.forEach { subcontrol ->
                             resultSet.addElement(
                                 LookupElementBuilder.create(subcontrol.removePrefix("::"))
                                     .withPresentableText(subcontrol)
@@ -166,7 +161,7 @@ class QssCompletionContributor : CompletionContributor() {
                         }
                     } else {
                         // Add all common sub-controls
-                        COMMON_SUBCONTROLS.forEach { subcontrol ->
+                        QssData.COMMON_SUBCONTROLS.forEach { subcontrol ->
                             resultSet.addElement(
                                 LookupElementBuilder.create(subcontrol.removePrefix("::"))
                                     .withPresentableText(subcontrol)
@@ -235,7 +230,7 @@ class QssCompletionContributor : CompletionContributor() {
 
         // Context-aware pseudo-state suggestions
         private fun getContextAwarePseudoStates(widget: String?, subControl: String?): List<String> {
-            val allStates = PSEUDO_STATES.toMutableList()
+            val allStates = QssData.PSEUDO_STATES.toMutableList()
             val priorityStates = mutableListOf<String>()
 
             // Prioritize based on widget type
@@ -289,7 +284,7 @@ class QssCompletionContributor : CompletionContributor() {
             }
 
             // Add CSS functions
-            FUNCTIONS.forEach { function ->
+            QssData.FUNCTIONS.forEach { function ->
                 resultSet.addElement(
                     LookupElementBuilder.create(function)
                         .withTypeText("Function")
@@ -303,7 +298,7 @@ class QssCompletionContributor : CompletionContributor() {
             }
 
             // Add common CSS units
-            UNITS.forEach { unit ->
+            QssData.UNITS.forEach { unit ->
                 resultSet.addElement(
                     LookupElementBuilder.create(unit)
                         .withTypeText("Unit")
@@ -311,7 +306,7 @@ class QssCompletionContributor : CompletionContributor() {
             }
 
             // Add common property values
-            COMMON_VALUES.forEach { value ->
+            QssData.COMMON_VALUES.forEach { value ->
                 resultSet.addElement(
                     LookupElementBuilder.create(value)
                         .withTypeText("Value")
@@ -333,123 +328,5 @@ class QssCompletionContributor : CompletionContributor() {
             // Get the last matched widget before current position
             return matches.lastOrNull()?.groupValues?.get(1)
         }
-
-        // Complete list of Qt 6.10 Style Sheet Properties (96 properties)
-        private val PROPERTIES = listOf(
-            "accent-color", "alternate-background-color", "selection-background-color", "selection-color",
-            "background", "background-attachment", "background-clip", "background-color", "background-image",
-            "background-origin", "background-position", "background-repeat",
-            "border", "border-bottom", "border-bottom-color", "border-bottom-left-radius",
-            "border-bottom-right-radius", "border-bottom-style", "border-bottom-width", "border-color",
-            "border-image", "border-left", "border-left-color", "border-left-style", "border-left-width",
-            "border-radius", "border-right", "border-right-color", "border-right-style", "border-right-width",
-            "border-style", "border-top", "border-top-color", "border-top-left-radius", "border-top-right-radius",
-            "border-top-style", "border-top-width", "border-width",
-            "bottom", "left", "position", "right", "top",
-            "button-layout", "dialogbuttonbox-buttons-have-icons",
-            "color", "placeholder-text-color",
-            "font", "font-family", "font-size", "font-style", "font-weight", "letter-spacing",
-            "gridline-color", "icon", "icon-size", "image", "image-position",
-            "lineedit-password-character", "lineedit-password-mask-delay",
-            "height", "max-height", "max-width", "min-height", "min-width", "width",
-            "margin", "margin-bottom", "margin-left", "margin-right", "margin-top",
-            "messagebox-text-interaction-flags", "opacity",
-            "outline", "outline-bottom-left-radius", "outline-bottom-right-radius", "outline-color",
-            "outline-offset", "outline-radius", "outline-style", "outline-top-left-radius", "outline-top-right-radius",
-            "padding", "padding-bottom", "padding-left", "padding-right", "padding-top",
-            "paint-alternating-row-colors-for-empty-area", "show-decoration-selected",
-            "spacing", "subcontrol-origin", "subcontrol-position",
-            "text-align", "text-decoration", "titlebar-show-tooltips-on-buttons", "widget-animation-duration"
-        )
-
-        // Complete list of styleable Qt widgets (50 widgets)
-        private val WIDGET_SELECTORS = listOf(
-            "QAbstractButton", "QAbstractItemView", "QAbstractScrollArea",
-            "QCheckBox", "QCommandLinkButton", "QComboBox", "QPushButton", "QRadioButton",
-            "QDateEdit", "QDateTimeEdit", "QTimeEdit",
-            "QDial", "QDoubleSpinBox", "QFontComboBox", "QLCDNumber", "QLineEdit", "QSlider", "QSpinBox",
-            "QDialog", "QDialogButtonBox", "QDockWidget", "QFrame", "QGroupBox", "QMainWindow",
-            "QSplitter", "QStackedWidget", "QWidget",
-            "QLabel", "QProgressBar", "QToolTip",
-            "QMenu", "QMenuBar", "QStatusBar", "QToolBar", "QToolBox", "QToolButton",
-            "QScrollArea", "QScrollBar", "QSizeGrip",
-            "QTabBar", "QTabWidget",
-            "QColumnView", "QHeaderView", "QListView", "QListWidget", "QTableView", "QTableWidget",
-            "QTreeView", "QTreeWidget", "QTextEdit", "QMessageBox"
-        )
-
-        // Widget-specific sub-controls mapping
-        private val WIDGET_SUBCONTROLS = mapOf(
-            "QCheckBox" to listOf("::indicator"),
-            "QColumnView" to listOf("::left-arrow", "::right-arrow"),
-            "QComboBox" to listOf("::drop-down", "::down-arrow"),
-            "QDateEdit" to listOf("::up-button", "::up-arrow", "::down-button", "::down-arrow"),
-            "QDateTimeEdit" to listOf("::up-button", "::up-arrow", "::down-button", "::down-arrow"),
-            "QTimeEdit" to listOf("::up-button", "::up-arrow", "::down-button", "::down-arrow"),
-            "QDockWidget" to listOf("::title", "::close-button", "::float-button"),
-            "QDoubleSpinBox" to listOf("::up-button", "::up-arrow", "::down-button", "::down-arrow"),
-            "QGroupBox" to listOf("::title", "::indicator"),
-            "QHeaderView" to listOf("::section", "::up-arrow", "::down-arrow"),
-            "QListView" to listOf("::item"),
-            "QListWidget" to listOf("::item"),
-            "QMainWindow" to listOf("::separator"),
-            "QMenu" to listOf("::item", "::indicator", "::separator", "::right-arrow", "::left-arrow", "::scroller", "::tearoff"),
-            "QMenuBar" to listOf("::item"),
-            "QProgressBar" to listOf("::chunk"),
-            "QPushButton" to listOf("::menu-indicator"),
-            "QRadioButton" to listOf("::indicator"),
-            "QScrollBar" to listOf("::handle", "::add-line", "::sub-line", "::add-page", "::sub-page", "::up-arrow", "::down-arrow", "::left-arrow", "::right-arrow"),
-            "QSlider" to listOf("::groove", "::handle"),
-            "QSpinBox" to listOf("::up-button", "::up-arrow", "::down-button", "::down-arrow"),
-            "QSplitter" to listOf("::handle"),
-            "QStatusBar" to listOf("::item"),
-            "QTabBar" to listOf("::tab", "::close-button", "::tear", "::scroller"),
-            "QTabWidget" to listOf("::pane", "::tab-bar", "::left-corner", "::right-corner"),
-            "QToolBar" to listOf("::separator", "::handle"),
-            "QToolBox" to listOf("::tab"),
-            "QToolButton" to listOf("::menu-indicator", "::menu-button", "::menu-arrow", "::up-arrow", "::down-arrow", "::left-arrow", "::right-arrow"),
-            "QTreeView" to listOf("::branch", "::item"),
-            "QTreeWidget" to listOf("::branch", "::item")
-        )
-
-        // Common sub-controls
-        private val COMMON_SUBCONTROLS = listOf(
-            "::item", "::indicator", "::handle", "::separator", "::title",
-            "::up-arrow", "::down-arrow", "::left-arrow", "::right-arrow",
-            "::drop-down", "::tab", "::branch", "::chunk", "::groove",
-            "::up-button", "::down-button", "::add-line", "::sub-line"
-        )
-
-        // QSS functions
-        private val FUNCTIONS = listOf(
-            "rgb(", "rgba(", "url(", "qlineargradient(", "qradialgradient(", "qconicalgradient("
-        )
-
-        // Complete pseudo-states (44 states)
-        private val PSEUDO_STATES = listOf(
-            ":active", ":adjoins-item", ":alternate", ":bottom", ":checked",
-            ":closable", ":closed", ":default", ":disabled", ":editable",
-            ":edit-focus", ":enabled", ":exclusive", ":first", ":flat",
-            ":floatable", ":focus", ":has-children", ":has-siblings",
-            ":horizontal", ":hover", ":indeterminate", ":last", ":left",
-            ":maximized", ":middle", ":minimized", ":movable", ":no-frame",
-            ":non-exclusive", ":off", ":on", ":only-one", ":open",
-            ":next-selected", ":pressed", ":previous-selected", ":read-only",
-            ":right", ":selected", ":top", ":unchecked", ":vertical", ":window"
-        )
-
-        // CSS Units
-        private val UNITS = listOf("px", "pt", "em", "ex", "%")
-
-        // Common property values
-        private val COMMON_VALUES = listOf(
-            "left", "right", "center", "justify", "top", "bottom", "middle",
-            "none", "solid", "dashed", "dotted", "double", "groove", "ridge", "inset", "outset",
-            "normal", "bold", "bolder", "lighter",
-            "italic", "oblique",
-            "underline", "overline", "line-through",
-            "auto", "transparent",
-            "white", "black", "red", "green", "blue", "yellow", "cyan", "magenta", "gray", "grey"
-        )
     }
 }
