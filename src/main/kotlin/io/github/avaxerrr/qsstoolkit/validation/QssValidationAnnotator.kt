@@ -4,145 +4,184 @@ import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.psi.PsiElement
+import com.intellij.psi.util.PsiTreeUtil
 import io.github.avaxerrr.qsstoolkit.completion.QssData
 import io.github.avaxerrr.qsstoolkit.lexer.QssTokenTypes
+import io.github.avaxerrr.qsstoolkit.psi.QssFile
 import io.github.avaxerrr.qsstoolkit.psi.QssTypes
+import java.util.Locale
+import com.intellij.openapi.util.TextRange
+import java.util.regex.Pattern
 
 class QssValidationAnnotator : Annotator {
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
+        if (element is QssFile) {
+            validateDuplicates(element, holder)
+        }
+
+        if (element.node.elementType == QssTypes.RULE) {
+            validateRuleSelectors(element, holder)
+        }
+
         if (element.node.elementType == QssTypes.DECLARATION) {
             validateDeclaration(element, holder)
         }
     }
 
-    private fun validateDeclaration(declaration: PsiElement, holder: AnnotationHolder) {
-        var propertyNameElement: PsiElement? = null
-        var colonElement: PsiElement? = null
+    private fun validateDuplicates(file: QssFile, holder: AnnotationHolder) {
+        val allRules = PsiTreeUtil.findChildrenOfType(file, PsiElement::class.java)
+            .filter { it.node.elementType == QssTypes.RULE }
 
-        var child = declaration.firstChild
+        val seen = mutableMapOf<String, PsiElement>()
+
+        for (rule in allRules) {
+            val selectorText = getSelectorText(rule)
+            if (selectorText.isEmpty()) continue
+
+            if (seen.containsKey(selectorText)) {
+                val selectorEnd = getSelectorEndOffset(rule)
+                val range = TextRange(rule.textRange.startOffset, selectorEnd)
+
+                holder.newAnnotation(HighlightSeverity.WEAK_WARNING, "Duplicate selector definition. Rules will be merged.")
+                    .range(range)
+                    .create()
+            } else {
+                seen[selectorText] = rule
+            }
+        }
+    }
+
+    private fun getSelectorText(rule: PsiElement): String {
+        val sb = StringBuilder()
+        var child = rule.firstChild
         while (child != null) {
-            if (child.node.elementType == QssTokenTypes.IDENTIFIER) {
-                propertyNameElement = child
-            } else if (child.node.elementType == QssTokenTypes.COLON) {
-                colonElement = child
+            if (child.node.elementType == QssTokenTypes.LBRACE) break
+            sb.append(child.text)
+            child = child.nextSibling
+        }
+        return sb.toString().trim()
+    }
+
+    private fun getSelectorEndOffset(rule: PsiElement): Int {
+        var child = rule.firstChild
+        var lastSelectorChild = child
+        while (child != null) {
+            if (child.node.elementType == QssTokenTypes.LBRACE) break
+            lastSelectorChild = child
+            child = child.nextSibling
+        }
+        return lastSelectorChild?.textRange?.endOffset ?: rule.textRange.startOffset
+    }
+
+    private fun validateRuleSelectors(rule: PsiElement, holder: AnnotationHolder) {
+        val selectorText = getSelectorText(rule)
+        if (selectorText.isEmpty()) return
+
+        var currentWidget: String? = null
+
+        for (widget in QssData.WIDGET_SELECTORS) {
+            if (selectorText.contains(widget, ignoreCase = true)) {
+                currentWidget = widget
                 break
+            }
+        }
+
+        if (currentWidget != null) {
+            val matcher = Pattern.compile("::([a-zA-Z0-9-]+)").matcher(selectorText)
+            while (matcher.find()) {
+                val subControlName = matcher.group(1)
+                val fullSubControl = "::" + subControlName
+
+                val validList = QssData.WIDGET_SUBCONTROLS[currentWidget]
+                if (validList != null && !validList.contains(fullSubControl)) {
+                    val startOffset = rule.textRange.startOffset + matcher.start()
+                    val endOffset = rule.textRange.startOffset + matcher.end()
+
+                    holder.newAnnotation(HighlightSeverity.ERROR, "'$fullSubControl' is not a valid sub-control for $currentWidget")
+                        .range(TextRange(startOffset, endOffset))
+                        .create()
+                }
+            }
+        }
+
+        var child = rule.firstChild
+        while (child != null) {
+            if (child.node.elementType == QssTokenTypes.LBRACE) break
+            if (child.node.elementType == QssTokenTypes.IDENTIFIER) {
+                val text = child.text
+                if (!text.startsWith("#") && !text.startsWith(".")) {
+                    val knownWidget = QssData.WIDGET_SELECTORS.firstOrNull { it.equals(text, ignoreCase = true) }
+                    if (knownWidget != null && knownWidget != text) {
+                        holder.newAnnotation(HighlightSeverity.ERROR, "Invalid casing. Did you mean '$knownWidget'?")
+                            .range(child)
+                            .create()
+                    }
+                }
             }
             child = child.nextSibling
         }
+    }
 
-        if (propertyNameElement == null || colonElement == null) return
+    private fun validateDeclaration(declaration: PsiElement, holder: AnnotationHolder) {
+        var propertyName = ""
+        var foundColon = false
 
-        val propertyName = propertyNameElement.text
-        if (propertyName.isNotEmpty() && propertyName[0].isUpperCase()) return
+        var child = declaration.firstChild
+        while (child != null) {
+            val type = child.node.elementType
 
-        if (!QssData.PROPERTIES.contains(propertyName)) {
-            holder.newAnnotation(HighlightSeverity.WARNING, "Unknown property '$propertyName'")
-                .range(propertyNameElement)
-                .create()
-        } else {
-            validateValue(declaration, propertyName, colonElement, holder)
+            if (!foundColon) {
+                if (type == QssTokenTypes.IDENTIFIER) {
+                    propertyName = child.text
+                } else if (type == QssTokenTypes.COLON) {
+                    foundColon = true
+                }
+            } else {
+                if (type != QssTokenTypes.WHITE_SPACE &&
+                    type != QssTokenTypes.SEMICOLON &&
+                    type != QssTokenTypes.COMMENT &&
+                    type != QssTokenTypes.RBRACE &&
+                    type != QssTokenTypes.LPAREN &&
+                    type != QssTokenTypes.RPAREN &&
+                    type != QssTokenTypes.COMMA) {
+
+                    if (propertyName.isNotEmpty()) {
+                        validateValue(propertyName, child, holder)
+                    }
+                }
+            }
+            child = child.nextSibling
         }
     }
 
-    private fun validateValue(declaration: PsiElement, propertyName: String, colonElement: PsiElement, holder: AnnotationHolder) {
-        val expectedType = QssData.PROPERTY_TYPES[propertyName] ?: return
+    private fun validateValue(propertyName: String, valueElement: PsiElement, holder: AnnotationHolder) {
+        val expectedType = QssData.PROPERTY_TYPES[propertyName.lowercase(Locale.getDefault())] ?: return
+        val valueText = valueElement.text.trim()
 
-        var current = colonElement.nextSibling
-        var valueText = ""
-        var valueStartElement: PsiElement? = null
-        var valueEndElement: PsiElement? = null
-        var hasTemplateTag = false
-
-        while (current != null) {
-            val type = current.node.elementType
-            if (type == QssTokenTypes.SEMICOLON || type == QssTokenTypes.RBRACE) break
-
-            if (type == QssTokenTypes.TEMPLATE_TAG) {
-                hasTemplateTag = true
-            }
-
-            if (type != QssTokenTypes.WHITE_SPACE && type != QssTokenTypes.COMMENT) {
-                if (valueStartElement == null) valueStartElement = current
-                valueEndElement = current
-                valueText += current.text
-            } else if (valueStartElement != null && type == QssTokenTypes.WHITE_SPACE) {
-                valueText += " "
-            }
-            current = current.nextSibling
+        val isValid = when (expectedType) {
+            QssData.PropertyType.COLOR -> isColor(valueText)
+            QssData.PropertyType.MEASUREMENT -> isMeasurement(valueText)
+            QssData.PropertyType.NUMBER -> isNumber(valueText)
+            QssData.PropertyType.URL -> valueText.startsWith("url(")
+            else -> true
         }
 
-        // SKIP validation if we found a template tag {{...}}
-        if (hasTemplateTag) return
-
-        if (valueStartElement == null || valueText.isEmpty()) return
-
-        val trimmedValue = valueText.trim()
-
-        val range = com.intellij.openapi.util.TextRange(
-            valueStartElement.textRange.startOffset,
-            valueEndElement!!.textRange.endOffset
-        )
-
-        var errorMsg: String? = null
-
-        when (expectedType) {
-            QssData.PropertyType.MEASUREMENT -> {
-                if (!isValidMeasurement(trimmedValue)) {
-                    errorMsg = "Invalid measurement: '$trimmedValue'. Expected number with unit (e.g., 10px) or 0"
-                }
-            }
-            QssData.PropertyType.COLOR -> {
-                if (!isValidColor(trimmedValue)) {
-                    errorMsg = "Invalid color: '$trimmedValue'. Expected #hex, rgb(), named color, or gradient"
-                }
-            }
-            QssData.PropertyType.NUMBER -> {
-                if (trimmedValue.toDoubleOrNull() == null) {
-                    errorMsg = "Invalid number: '$trimmedValue'"
-                }
-            }
-            QssData.PropertyType.URL -> {
-                if (trimmedValue != "none" && (!trimmedValue.startsWith("url(") || !trimmedValue.endsWith(")"))) {
-                    errorMsg = "Invalid URL: '$trimmedValue'. Expected url(...) or 'none'"
-                }
-            }
-            else -> {}
-        }
-
-        if (errorMsg != null) {
-            holder.newAnnotation(HighlightSeverity.ERROR, errorMsg)
-                .range(range)
+        if (!isValid) {
+            holder.newAnnotation(HighlightSeverity.ERROR, "Invalid value for property '$propertyName'. Expected $expectedType")
+                .range(valueElement)
                 .create()
         }
     }
 
-    private fun isValidMeasurement(value: String): Boolean {
-        // Handle multi-value shorthand (e.g., "5px 10px", "1px 2px 3px 4px")
-        val parts = value.split("\\s+".toRegex())
-        if (parts.size > 4) return false
-
-        val regex = Regex("^-?\\d+(\\.\\d+)?(px|pt|em|ex|%)$")
-
-        return parts.all { part ->
-            part == "0" || part == "auto" || regex.matches(part)
-        }
+    private fun isColor(text: String): Boolean {
+        if (text.startsWith("#")) return true
+        val lower = text.lowercase()
+        if (lower.startsWith("rgb") || lower.startsWith("hsv") || lower.startsWith("q") || lower.contains("gradient")) return true
+        if (lower == "palette") return true
+        // FIX: Allow hyphens in color names (e.g., highlighted-text)
+        if (text.matches(Regex("^[a-zA-Z-]+$"))) return true
+        return false
     }
-
-    private fun isValidColor(value: String): Boolean {
-        if (value.startsWith("#")) {
-            return value.length == 4 || value.length == 7 || value.length == 9
-        }
-        if (value.startsWith("rgb(") || value.startsWith("rgba(") ||
-            value.startsWith("hsv(") || value.startsWith("hsva(")) {
-            return value.endsWith(")")
-        }
-        if (value.startsWith("qlineargradient(") ||
-            value.startsWith("qradialgradient(") ||
-            value.startsWith("qconicalgradient(")) {
-            return value.endsWith(")")
-        }
-
-        val commonColors = listOf("red", "green", "blue", "white", "black", "transparent", "yellow", "cyan", "magenta", "gray", "grey", "darkgray", "lightgray")
-        return commonColors.contains(value.lowercase()) || value == "none"
-    }
+    private fun isMeasurement(text: String): Boolean = text == "0" || text.matches(Regex("^-?\\d+(\\.\\d+)?(px|pt|em|ex)?$"))
+    private fun isNumber(text: String): Boolean = text.matches(Regex("^-?\\d+(\\.\\d+)?$"))
 }

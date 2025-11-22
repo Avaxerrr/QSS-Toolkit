@@ -12,32 +12,68 @@ object QssData {
     enum class PropertyType {
         COLOR,
         MEASUREMENT, // Requires unit (px, pt) or 0
-        NUMBER,      // Raw number (opacity)
+        NUMBER,      // Raw number (opacity) or Boolean (0/1)
         STRING,      // Generic text or specific enums
-        URL,
-        BORDER       // Complex (width style color)
+        URL,         // Strict URL check (url(...))
+        BORDER       // Complex (width style color) - effectively "Any"
     }
 
     // Map properties to their expected value types
     val PROPERTY_TYPES = mapOf(
         "accent-color" to PropertyType.COLOR,
+        "alignment" to PropertyType.STRING,
         "alternate-background-color" to PropertyType.COLOR,
-        "background" to PropertyType.COLOR, // Simplified for now
+        "background" to PropertyType.BORDER, // Complex (color + url + repeat)
+        "background-attachment" to PropertyType.STRING,
+        "background-clip" to PropertyType.STRING,
         "background-color" to PropertyType.COLOR,
-        "background-image" to PropertyType.URL,
-        "border-image" to PropertyType.URL,
-        "image" to PropertyType.URL,
-        "icon" to PropertyType.URL,
+        "background-image" to PropertyType.BORDER, // Relaxed to allow complex backgrounds
+        "background-origin" to PropertyType.STRING,
+        "background-position" to PropertyType.STRING,
+        "background-repeat" to PropertyType.STRING,
         "border" to PropertyType.BORDER,
+        "border-bottom" to PropertyType.BORDER,
+        "border-bottom-color" to PropertyType.COLOR,
+        "border-bottom-left-radius" to PropertyType.MEASUREMENT,
+        "border-bottom-right-radius" to PropertyType.MEASUREMENT,
+        "border-bottom-style" to PropertyType.STRING,
+        "border-bottom-width" to PropertyType.MEASUREMENT,
         "border-color" to PropertyType.COLOR,
+        "border-image" to PropertyType.BORDER, // Relaxed to allow url(...) + numbers
+        "border-left" to PropertyType.BORDER,
+        "border-left-color" to PropertyType.COLOR,
+        "border-left-style" to PropertyType.STRING,
+        "border-left-width" to PropertyType.MEASUREMENT,
         "border-radius" to PropertyType.MEASUREMENT,
+        "border-right" to PropertyType.BORDER,
+        "border-right-color" to PropertyType.COLOR,
+        "border-right-style" to PropertyType.STRING,
+        "border-right-width" to PropertyType.MEASUREMENT,
+        "border-style" to PropertyType.STRING,
+        "border-top" to PropertyType.BORDER,
+        "border-top-color" to PropertyType.COLOR,
+        "border-top-left-radius" to PropertyType.MEASUREMENT,
+        "border-top-right-radius" to PropertyType.MEASUREMENT,
+        "border-top-style" to PropertyType.STRING,
+        "border-top-width" to PropertyType.MEASUREMENT,
         "border-width" to PropertyType.MEASUREMENT,
         "bottom" to PropertyType.MEASUREMENT,
+        "button-layout" to PropertyType.NUMBER,
         "color" to PropertyType.COLOR,
+        "dialogbuttonbox-buttons-have-icons" to PropertyType.NUMBER,
+        "font" to PropertyType.STRING,
+        "font-family" to PropertyType.STRING,
         "font-size" to PropertyType.MEASUREMENT,
+        "font-style" to PropertyType.STRING,
+        "font-weight" to PropertyType.STRING,
+        "gridline-color" to PropertyType.COLOR,
         "height" to PropertyType.MEASUREMENT,
+        "icon" to PropertyType.BORDER, // Relaxed
         "icon-size" to PropertyType.MEASUREMENT,
+        "image" to PropertyType.BORDER, // Relaxed
+        "image-position" to PropertyType.STRING,
         "left" to PropertyType.MEASUREMENT,
+        "lineedit-password-character" to PropertyType.NUMBER,
         "margin" to PropertyType.MEASUREMENT,
         "margin-bottom" to PropertyType.MEASUREMENT,
         "margin-left" to PropertyType.MEASUREMENT,
@@ -45,133 +81,134 @@ object QssData {
         "margin-top" to PropertyType.MEASUREMENT,
         "max-height" to PropertyType.MEASUREMENT,
         "max-width" to PropertyType.MEASUREMENT,
+        "messagebox-text-interaction-flags" to PropertyType.NUMBER,
         "min-height" to PropertyType.MEASUREMENT,
         "min-width" to PropertyType.MEASUREMENT,
         "opacity" to PropertyType.NUMBER,
+        "outline" to PropertyType.BORDER,
+        "outline-color" to PropertyType.COLOR,
+        "outline-offset" to PropertyType.MEASUREMENT,
+        "outline-radius" to PropertyType.MEASUREMENT,
+        "outline-style" to PropertyType.STRING,
+        "outline-width" to PropertyType.MEASUREMENT,
         "padding" to PropertyType.MEASUREMENT,
         "padding-bottom" to PropertyType.MEASUREMENT,
         "padding-left" to PropertyType.MEASUREMENT,
         "padding-right" to PropertyType.MEASUREMENT,
         "padding-top" to PropertyType.MEASUREMENT,
+        "paint-alternating-row-colors-for-empty-area" to PropertyType.NUMBER,
+        "placeholder-text-color" to PropertyType.COLOR,
+        "position" to PropertyType.STRING,
+        "qproperty-alignment" to PropertyType.STRING,
+        "qproperty-wordWrap" to PropertyType.NUMBER,
         "right" to PropertyType.MEASUREMENT,
         "selection-background-color" to PropertyType.COLOR,
         "selection-color" to PropertyType.COLOR,
+        "show-decoration-selected" to PropertyType.NUMBER,
         "spacing" to PropertyType.MEASUREMENT,
+        "subcontrol-origin" to PropertyType.STRING,
+        "subcontrol-position" to PropertyType.STRING,
+        "text-align" to PropertyType.STRING,
+        "text-decoration" to PropertyType.STRING,
+        "titlebar-show-maximize-button" to PropertyType.NUMBER,
+        "titlebar-show-minimize-button" to PropertyType.NUMBER,
         "top" to PropertyType.MEASUREMENT,
         "width" to PropertyType.MEASUREMENT
     )
 
-    // Keep the original list for backward compatibility and iteration
-    val PROPERTIES = PROPERTY_TYPES.keys.toList() + listOf(
-        "background-attachment", "background-clip",
-        "background-origin", "background-position", "background-repeat",
-        "border-bottom", "border-bottom-color", "border-bottom-left-radius",
-        "border-bottom-right-radius", "border-bottom-style", "border-bottom-width",
-        "border-left", "border-left-color", "border-left-style", "border-left-width",
-        "border-right", "border-right-color", "border-right-style", "border-right-width",
-        "border-style", "border-top", "border-top-color", "border-top-left-radius", "border-top-right-radius",
-        "border-top-style", "border-top-width",
-        "position", "button-layout", "dialogbuttonbox-buttons-have-icons",
-        "placeholder-text-color",
-        "font", "font-family", "font-style", "font-weight", "letter-spacing",
-        "gridline-color", "image-position",
-        "lineedit-password-character", "lineedit-password-mask-delay",
-        "messagebox-text-interaction-flags",
-        "outline", "outline-bottom-left-radius", "outline-bottom-right-radius", "outline-color",
-        "outline-offset", "outline-radius", "outline-style", "outline-top-left-radius", "outline-top-right-radius",
-        "paint-alternating-row-colors-for-empty-area", "show-decoration-selected",
-        "subcontrol-origin", "subcontrol-position",
-        "text-align", "text-decoration", "titlebar-show-tooltips-on-buttons", "widget-animation-duration"
-    )
+    // Helper for CompletionContributor
+    val PROPERTIES = PROPERTY_TYPES.keys.toList()
 
-    // ... [Keep remaining lists same as before] ...
-    // Complete list of styleable Qt widgets
+    // List of standard Qt Widgets (Qt 6 + 5 superset)
     val WIDGET_SELECTORS = listOf(
-        "QAbstractButton", "QAbstractItemView", "QAbstractScrollArea",
-        "QCheckBox", "QCommandLinkButton", "QComboBox", "QPushButton", "QRadioButton",
-        "QDateEdit", "QDateTimeEdit", "QTimeEdit",
-        "QDial", "QDoubleSpinBox", "QFontComboBox", "QLCDNumber", "QLineEdit", "QSlider", "QSpinBox",
-        "QDialog", "QDialogButtonBox", "QDockWidget", "QFrame", "QGroupBox", "QMainWindow",
-        "QSplitter", "QStackedWidget", "QWidget",
-        "QLabel", "QProgressBar", "QToolTip",
-        "QMenu", "QMenuBar", "QStatusBar", "QToolBar", "QToolBox", "QToolButton",
-        "QScrollArea", "QScrollBar", "QSizeGrip",
-        "QTabBar", "QTabWidget",
-        "QColumnView", "QHeaderView", "QListView", "QListWidget", "QTableView", "QTableWidget",
-        "QTreeView", "QTreeWidget", "QTextEdit", "QMessageBox"
+        "QAbstractScrollArea", "QCalendarWidget", "QCheckBox", "QColumnView", "QComboBox",
+        "QDateEdit", "QDateTimeEdit", "QDialog", "QDialogButtonBox", "QDockWidget",
+        "QDoubleSpinBox", "QFrame", "QGroupBox", "QHeaderView", "QKeySequenceEdit",
+        "QLabel", "QLineEdit", "QListView", "QListWidget", "QMainWindow",
+        "QMdiArea", "QMdiSubWindow", "QMenu", "QMenuBar", "QMessageBox",
+        "QPlainTextEdit", "QProgressBar", "QPushButton", "QRadioButton", "QScrollArea",
+        "QScrollBar", "QSizeGrip", "QSlider", "QSpinBox", "QSplitter",
+        "QStackedWidget", "QStatusBar", "QTabBar", "QTabWidget", "QTableView",
+        "QTableWidget", "QTextBrowser", "QTextEdit", "QTimeEdit", "QToolBar",
+        "QToolBox", "QToolButton", "QToolTip", "QTreeView", "QTreeWidget",
+        "QWidget", "QWizard", "QWizardPage"
     )
 
-    // Widget-specific sub-controls mapping
+    // List of pseudo-states
+    val PSEUDO_STATES = listOf(
+        "active", "adjoins-item", "alternate", "bottom", "checked", "closable", "closed",
+        "default", "dir", "dir(ltr)", "dir(rtl)", "disabled", "edit-focus", "editable",
+        "enabled", "first", "flat", "floatable", "focus", "has-children", "has-siblings",
+        "horizontal", "hover", "indeterminate", "last", "left", "maximized", "middle",
+        "minimized", "movable", "next-selected", "no-frame", "non-exclusive-indicator",
+        "off", "on", "only-one", "open", "pressed", "previous-selected", "read-only",
+        "right", "selected", "top", "unchecked", "vertical", "window"
+    )
+
+    // Map specific sub-controls to widgets
     val WIDGET_SUBCONTROLS = mapOf(
         "QCheckBox" to listOf("::indicator"),
-        "QColumnView" to listOf("::left-arrow", "::right-arrow"),
         "QComboBox" to listOf("::drop-down", "::down-arrow"),
-        "QDateEdit" to listOf("::up-button", "::up-arrow", "::down-button", "::down-arrow"),
-        "QDateTimeEdit" to listOf("::up-button", "::up-arrow", "::down-button", "::down-arrow"),
-        "QTimeEdit" to listOf("::up-button", "::up-arrow", "::down-button", "::down-arrow"),
+        "QDateTimeEdit" to listOf("::up-button", "::down-button", "::up-arrow", "::down-arrow"),
         "QDockWidget" to listOf("::title", "::close-button", "::float-button"),
-        "QDoubleSpinBox" to listOf("::up-button", "::up-arrow", "::down-button", "::down-arrow"),
+        "QDoubleSpinBox" to listOf("::up-button", "::down-button", "::up-arrow", "::down-arrow"),
         "QGroupBox" to listOf("::title", "::indicator"),
-        "QHeaderView" to listOf("::section", "::up-arrow", "::down-arrow"),
+        "QHeaderView" to listOf("::section", "::down-arrow", "::up-arrow"),
         "QListView" to listOf("::item"),
-        "QListWidget" to listOf("::item"),
-        "QMainWindow" to listOf("::separator"),
-        "QMenu" to listOf("::item", "::indicator", "::separator", "::right-arrow", "::left-arrow", "::scroller", "::tearoff"),
+        "QMdiSubWindow" to listOf("::title", "::close-button", "::minimize-button", "::maximize-button"),
+        "QMenu" to listOf("::item", "::indicator", "::separator", "::tear-off", "::icon", "::right-arrow", "::scroller"),
         "QMenuBar" to listOf("::item"),
         "QProgressBar" to listOf("::chunk"),
-        "QPushButton" to listOf("::menu-indicator"),
         "QRadioButton" to listOf("::indicator"),
         "QScrollBar" to listOf("::handle", "::add-line", "::sub-line", "::add-page", "::sub-page", "::up-arrow", "::down-arrow", "::left-arrow", "::right-arrow"),
-        "QSlider" to listOf("::groove", "::handle"),
-        "QSpinBox" to listOf("::up-button", "::up-arrow", "::down-button", "::down-arrow"),
-        "QSplitter" to listOf("::handle"),
-        "QStatusBar" to listOf("::item"),
-        "QTabBar" to listOf("::tab", "::close-button", "::tear", "::scroller"),
-        "QTabWidget" to listOf("::pane", "::tab-bar", "::left-corner", "::right-corner"),
-        "QToolBar" to listOf("::separator", "::handle"),
+        "QSlider" to listOf("::groove", "::handle", "::add-page", "::sub-page"),
+        "QSpinBox" to listOf("::up-button", "::down-button", "::up-arrow", "::down-arrow"),
+        "QTabBar" to listOf("::tab", "::scroller", "::tear", "::close-button"),
+        "QTabWidget" to listOf("::pane", "::tab-bar"),
+        "QTableView" to listOf("::item"),
         "QToolBox" to listOf("::tab"),
-        "QToolButton" to listOf("::menu-indicator", "::menu-button", "::menu-arrow", "::up-arrow", "::down-arrow", "::left-arrow", "::right-arrow"),
-        "QTreeView" to listOf("::branch", "::item"),
-        "QTreeWidget" to listOf("::branch", "::item")
+        "QToolButton" to listOf("::menu-button", "::menu-indicator", "::menu-arrow"),
+        "QTreeView" to listOf("::item", "::branch")
     )
 
-    // Common sub-controls
+    // Common Subcontrols fallback
     val COMMON_SUBCONTROLS = listOf(
-        "::item", "::indicator", "::handle", "::separator", "::title",
-        "::up-arrow", "::down-arrow", "::left-arrow", "::right-arrow",
-        "::drop-down", "::tab", "::branch", "::chunk", "::groove",
-        "::up-button", "::down-button", "::add-line", "::sub-line"
+        "::indicator", "::item", "::icon", "::text", "::title", "::menu-arrow", "::down-arrow", "::up-arrow",
+        "::drop-down", "::scroller", "::tear", "::handle", "::groove", "::add-page", "::sub-page",
+        "::add-line", "::sub-line", "::chunk", "::separator", "::section", "::tab-bar", "::pane", "::tab"
     )
 
-    // QSS functions
-    val FUNCTIONS = listOf(
-        "rgb(", "rgba(", "url(", "qlineargradient(", "qradialgradient(", "qconicalgradient("
-    )
-
-    // Complete pseudo-states (44 states)
-    val PSEUDO_STATES = listOf(
-        ":active", ":adjoins-item", ":alternate", ":bottom", ":checked",
-        ":closable", ":closed", ":default", ":disabled", ":editable",
-        ":edit-focus", ":enabled", ":exclusive", ":first", ":flat",
-        ":floatable", ":focus", ":has-children", ":has-siblings",
-        ":horizontal", ":hover", ":indeterminate", ":last", ":left",
-        ":maximized", ":middle", ":minimized", ":movable", ":no-frame",
-        ":non-exclusive", ":off", ":on", ":only-one", ":open",
-        ":next-selected", ":pressed", ":previous-selected", ":read-only",
-        ":right", ":selected", ":top", ":unchecked", ":vertical", ":window"
-    )
-
-    // CSS Units
-    val UNITS = listOf("px", "pt", "em", "ex", "%")
-
-    // Common property values
+    // Values for Completion
     val COMMON_VALUES = listOf(
-        "left", "right", "center", "justify", "top", "bottom", "middle",
-        "none", "solid", "dashed", "dotted", "double", "groove", "ridge", "inset", "outset",
-        "normal", "bold", "bolder", "lighter",
-        "italic", "oblique",
-        "underline", "overline", "line-through",
-        "auto", "transparent",
-        "white", "black", "red", "green", "blue", "yellow", "cyan", "magenta", "gray", "grey"
+        "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure", "beige", "bisque", "black", "blanchedalmond",
+        "blue", "blueviolet", "bold", "bottom", "brown", "burlywood", "cadetblue", "center", "chartreuse",
+        "chocolate", "coral", "cornflowerblue", "cornsilk", "crimson", "cyan", "darkblue", "darkcyan",
+        "darkgoldenrod", "darkgray", "darkgreen", "darkgrey", "darkkhaki", "darkmagenta", "darkolivegreen",
+        "darkorange", "darkorchid", "darkred", "darksalmon", "darkseagreen", "darkslateblue", "darkslategray",
+        "darkslategrey", "darkturquoise", "darkviolet", "deeppink", "deepskyblue", "dimgray", "dimgrey",
+        "dodgerblue", "firebrick", "floralwhite", "forestgreen", "fuchsia", "gainsboro", "ghostwhite", "gold",
+        "goldenrod", "gray", "green", "greenyellow", "grey", "honeydew", "hotpink", "indianred", "indigo",
+        "italic", "ivory", "khaki", "lavender", "lavenderblush", "lawngreen", "left", "lemonchiffon",
+        "lightblue", "lightcoral", "lightcyan", "lightgoldenrodyellow", "lightgray", "lightgreen", "lightgrey",
+        "lightpink", "lightsalmon", "lightseagreen", "lightskyblue", "lightslategray", "lightslategrey",
+        "lightsteelblue", "lightyellow", "lime", "limegreen", "linen", "magenta", "maroon", "mediumaquamarine",
+        "mediumblue", "mediumorchid", "mediumpurple", "mediumseagreen", "mediumslateblue", "mediumspringgreen",
+        "mediumturquoise", "mediumvioletred", "midnightblue", "mintcream", "mistyrose", "moccasin", "navajowhite",
+        "navy", "none", "normal", "oldlace", "olive", "olivedrab", "orange", "orangered", "orchid",
+        "palegoldenrod", "palegreen", "paleturquoise", "palevioletred", "papayawhip", "peachpuff", "peru",
+        "pink", "plum", "powderblue", "purple", "red", "repeat", "repeat-x", "repeat-y", "right",
+        "rosybrown", "royalblue", "saddlebrown", "salmon", "sandybrown", "seagreen", "seashell", "sienna",
+        "silver", "skyblue", "slateblue", "slategray", "slategrey", "snow", "solid", "springgreen",
+        "steelblue", "tan", "teal", "thistle", "tomato", "top", "transparent", "turquoise", "underline",
+        "violet", "wheat", "white", "whitesmoke", "yellow", "yellowgreen"
     )
+
+    // Functions
+    val FUNCTIONS = listOf(
+        "url()", "rgb()", "rgba()", "hsl()", "hsla()", "qlineargradient()",
+        "qradialgradient()", "qconicalgradient()", "palette()"
+    )
+
+    // Units
+    val UNITS = listOf("px", "pt", "em", "ex")
 }
