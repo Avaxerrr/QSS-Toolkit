@@ -74,6 +74,12 @@ class QssParser : PsiParser {
                     hasSelectorComponents = true
                     builder.advanceLexer()
                 }
+                QssTokenTypes.LBRACKET -> {
+                    // Parse attribute selector
+                    if (parseAttributeSelector(builder)) {
+                        hasSelectorComponents = true
+                    }
+                }
                 QssTokenTypes.WHITE_SPACE, QssTokenTypes.COMMENT -> {
                     builder.advanceLexer()
                 }
@@ -106,6 +112,70 @@ class QssParser : PsiParser {
         }
 
         return hasSelectorComponents
+    }
+
+    private fun parseAttributeSelector(builder: PsiBuilder): Boolean {
+        val attributeMarker = builder.mark()
+
+        // Expect opening bracket
+        if (!expectToken(builder, QssTokenTypes.LBRACKET)) {
+            attributeMarker.drop()
+            return false
+        }
+
+        // Skip whitespace
+        while (builder.tokenType == QssTokenTypes.WHITE_SPACE) {
+            builder.advanceLexer()
+        }
+
+        // Expect attribute name (identifier)
+        if (builder.tokenType != QssTokenTypes.IDENTIFIER) {
+            builder.error("Expected attribute name")
+            attributeMarker.drop()
+            return false
+        }
+        builder.advanceLexer()
+
+        // Skip whitespace
+        while (builder.tokenType == QssTokenTypes.WHITE_SPACE) {
+            builder.advanceLexer()
+        }
+
+        // Check for operator (optional)
+        when (builder.tokenType) {
+            QssTokenTypes.EQUALS, QssTokenTypes.STARTS_WITH, 
+            QssTokenTypes.ENDS_WITH, QssTokenTypes.CONTAINS -> {
+                builder.advanceLexer()
+
+                // Skip whitespace
+                while (builder.tokenType == QssTokenTypes.WHITE_SPACE) {
+                    builder.advanceLexer()
+                }
+
+                // Expect value (string or identifier)
+                if (builder.tokenType == QssTokenTypes.STRING || 
+                    builder.tokenType == QssTokenTypes.IDENTIFIER) {
+                    builder.advanceLexer()
+                } else {
+                    builder.error("Expected attribute value")
+                }
+
+                // Skip whitespace
+                while (builder.tokenType == QssTokenTypes.WHITE_SPACE) {
+                    builder.advanceLexer()
+                }
+            }
+        }
+
+        // Expect closing bracket
+        if (!expectToken(builder, QssTokenTypes.RBRACKET)) {
+            builder.error("Expected ']'")
+            attributeMarker.drop()
+            return false
+        }
+
+        attributeMarker.done(QssTypes.ATTRIBUTE_SELECTOR)
+        return true
     }
 
 

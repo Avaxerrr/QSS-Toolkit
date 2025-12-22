@@ -18,9 +18,17 @@ interface QssTokenTypes {
         // Punctuation
         val LBRACE = QssElementType("LBRACE") // {
         val RBRACE = QssElementType("RBRACE") // }
+        val LBRACKET = QssElementType("LBRACKET") // [
+        val RBRACKET = QssElementType("RBRACKET") // ]
         val SEMICOLON = QssElementType("SEMICOLON") // ;
         val COLON = QssElementType("COLON") // :
         val COMMA = QssElementType("COMMA") // ,
+
+        // Attribute operators
+        val EQUALS = QssElementType("EQUALS") // =
+        val STARTS_WITH = QssElementType("STARTS_WITH") // ^=
+        val ENDS_WITH = QssElementType("ENDS_WITH") // $=
+        val CONTAINS = QssElementType("CONTAINS") // *=
 
         // Property values
         val STRING = QssElementType("STRING")

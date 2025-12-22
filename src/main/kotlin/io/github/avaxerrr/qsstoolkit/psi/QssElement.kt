@@ -12,6 +12,8 @@ interface QssRule : QssCompositeElement
 
 interface QssSelectorList : QssCompositeElement
 
+interface QssAttributeSelector : QssCompositeElement
+
 interface QssDeclaration : QssCompositeElement {
     val propertyName: String?
     val values: QssPropertyValues?

@@ -86,6 +86,14 @@ class QssLexer : LexerBase() {
                 currentPosition++
                 currentToken = QssTokenTypes.RBRACE
             }
+            buffer[currentPosition] == '[' -> {
+                currentPosition++
+                currentToken = QssTokenTypes.LBRACKET
+            }
+            buffer[currentPosition] == ']' -> {
+                currentPosition++
+                currentToken = QssTokenTypes.RBRACKET
+            }
             buffer[currentPosition] == ';' -> {
                 currentPosition++
                 currentToken = QssTokenTypes.SEMICOLON
@@ -93,6 +101,26 @@ class QssLexer : LexerBase() {
             buffer[currentPosition] == ',' -> {
                 currentPosition++
                 currentToken = QssTokenTypes.COMMA
+            }
+            // Handle attribute operators
+            buffer[currentPosition] == '^' && currentPosition + 1 < bufferEnd &&
+                    buffer[currentPosition + 1] == '=' -> {
+                currentPosition += 2
+                currentToken = QssTokenTypes.STARTS_WITH
+            }
+            buffer[currentPosition] == '$' && currentPosition + 1 < bufferEnd &&
+                    buffer[currentPosition + 1] == '=' -> {
+                currentPosition += 2
+                currentToken = QssTokenTypes.ENDS_WITH
+            }
+            buffer[currentPosition] == '*' && currentPosition + 1 < bufferEnd &&
+                    buffer[currentPosition + 1] == '=' -> {
+                currentPosition += 2
+                currentToken = QssTokenTypes.CONTAINS
+            }
+            buffer[currentPosition] == '=' -> {
+                currentPosition++
+                currentToken = QssTokenTypes.EQUALS
             }
             buffer[currentPosition] == '#' -> {
                 scanHashOrColor()

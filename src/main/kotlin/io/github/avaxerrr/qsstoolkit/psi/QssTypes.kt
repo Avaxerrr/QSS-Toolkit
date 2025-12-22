@@ -16,6 +16,7 @@ interface QssTypes {
         // Rules
         val RULE = QssElementType("RULE")
         val SELECTOR_LIST = QssElementType("SELECTOR_LIST")
+        val ATTRIBUTE_SELECTOR = QssElementType("ATTRIBUTE_SELECTOR")
 
         // Declarations
         val DECLARATION = QssElementType("DECLARATION")
@@ -34,6 +35,7 @@ interface QssTypes {
             return when(type) {
                 RULE -> QssRuleImpl(node!!)
                 SELECTOR_LIST -> QssSelectorListImpl(node!!)
+                ATTRIBUTE_SELECTOR -> QssAttributeSelectorImpl(node!!)
                 DECLARATION -> QssDeclarationImpl(node!!)
                 PROPERTY_VALUES -> QssPropertyValuesImpl(node!!)
                 PROPERTY_VALUE -> QssPropertyValueImpl(node!!)

@@ -14,6 +14,8 @@ class QssRuleImpl(node: ASTNode) : QssCompositeElementImpl(node), QssRule
 
 class QssSelectorListImpl(node: ASTNode) : QssCompositeElementImpl(node), QssSelectorList
 
+class QssAttributeSelectorImpl(node: ASTNode) : QssCompositeElementImpl(node), QssAttributeSelector
+
 class QssDeclarationImpl(node: ASTNode) : QssCompositeElementImpl(node), QssDeclaration {
     override val propertyName: String?
         get() = findChildByType<PsiElement>(QssTokenTypes.IDENTIFIER)?.text
