@@ -69,6 +69,7 @@ class QssParser : PsiParser {
         while (!builder.eof() && builder.tokenType != QssTokenTypes.LBRACE) {
             when (builder.tokenType) {
                 QssTokenTypes.IDENTIFIER, QssTokenTypes.HASH, QssTokenTypes.DOT,
+                QssTokenTypes.ASTERISK, QssTokenTypes.GT,
                 QssTokenTypes.PSEUDO_STATE, QssTokenTypes.PSEUDO_ELEMENT,
                 QssTokenTypes.COMMA -> {
                     hasSelectorComponents = true

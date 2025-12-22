@@ -118,6 +118,14 @@ class QssLexer : LexerBase() {
                 currentPosition += 2
                 currentToken = QssTokenTypes.CONTAINS
             }
+            buffer[currentPosition] == '*' -> {
+                currentPosition++
+                currentToken = QssTokenTypes.ASTERISK
+            }
+            buffer[currentPosition] == '>' -> {
+                currentPosition++
+                currentToken = QssTokenTypes.GT
+            }
             buffer[currentPosition] == '=' -> {
                 currentPosition++
                 currentToken = QssTokenTypes.EQUALS

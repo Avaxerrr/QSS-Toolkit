@@ -39,6 +39,8 @@ interface QssTokenTypes {
         // Special selectors
         val HASH = QssElementType("HASH") // #
         val DOT = QssElementType("DOT") // .
+        val ASTERISK = QssElementType("ASTERISK") // *
+        val GT = QssElementType("GT") // >
         val PSEUDO_STATE = QssElementType("PSEUDO_STATE") // :hover, etc.
         val PSEUDO_ELEMENT = QssElementType("PSEUDO_ELEMENT") // ::item, etc.
 
