@@ -52,8 +52,18 @@ intellijPlatform {
                 <li><b>Enhanced Syntax Highlighting:</b>
                     <ul>
                         <li><b>Semantic Coloring:</b> Distinct colors for Widgets (Teal), Properties (Blue), Keywords (Orange), and Templates</li>
+                        <li><b>Theme Compatibility:</b> Fixed invisible widget/property colors in dark themes using reliable color key mapping (CONSTANT + INSTANCE_METHOD)</li>
                         <li><b>URL & Gradient Support:</b> Proper highlighting for <code>url(...)</code> paths and Qt gradient functions</li>
                         <li><b>Improved Tokenization:</b> Numbers with units and CSS keywords are now visually distinct</li>
+                    </ul>
+                </li>
+                <li><b>Background Color Highlighting:</b>
+                    <ul>
+                        <li><b>Visual Color Display:</b> See actual colors as backgrounds behind color values (#FF0000 shows solid red background)</li>
+                        <li><b>Contrast-Aware Text:</b> Text color automatically adjusts (black/white) based on WCAG luminance for optimal readability</li>
+                        <li><b>Accurate Colors:</b> Displays exact RGB values with no forced transparency</li>
+                        <li><b>Alpha Transparency Support:</b> Preserves original alpha from rgba() and #RRGGBBAA formats</li>
+                        <li><b>Accessibility:</b> Implements W3C WCAG 2.0 standards for color contrast (same algorithm as Chrome DevTools, VS Code)</li>
                     </ul>
                 </li>
                 <li><b>Instant Value Suggestions:</b> Auto-complete for CSS units (px, pt, em), colors, alignments, and border styles</li>

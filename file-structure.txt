@@ -47,6 +47,7 @@ QSS Toolkit/
 |         |                        |    +--- ColorBoxIconRenderer.kt
 |         |                        |    +--- ColorHistoryManager.kt
 |         |                        |    +--- QssColorAnnotator.kt
+|         |                        |    +--- QssColorBackgroundAnnotator.kt
 |         |                        |    +--- QssSyntaxHighlighter.kt
 |         |                        |    \--- QssSyntaxHighlighterFactory.kt
 |         |                        |    
@@ -95,7 +96,9 @@ QSS Toolkit/
 |                   |    
 |                   +--- plugin.xml
 |                   \--- pluginIcon.svg
-|
+|    
++--- checklist of broken features for the new validator and error detection.txt
++--- error-detection-and-validation-implementation.md
 +--- file-structure.txt
 +--- gradle.properties
 +--- gradlew

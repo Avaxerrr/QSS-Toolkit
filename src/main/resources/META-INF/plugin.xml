@@ -14,6 +14,7 @@
             <li><b>Robust Error Detection</b> - Real-time validation for property names and values. Catch typos like "pading" or invalid values like "width: red" before you run your app.</li>
             <li><b>Template Support</b> - Native support for Jinja2/QString templates (e.g., <code>{{BUTTON_COLOR}}</code>). The parser correctly handles and highlights variable tags without throwing syntax errors.</li>
             <li><b>Enhanced Highlighting</b> - Brand new semantic color scheme: Widgets (Teal), Properties (Blue), Keywords (Orange), and Templates are visually distinct for better readability.</li>
+            <li><b>Visual Color Backgrounds</b> - See actual colors displayed as backgrounds with smart contrast-aware text. Colors are shown exactly as they appear in your UI.</li>
         </ul>
 
         <h3>Key Features</h3>
@@ -23,7 +24,8 @@
             <li><b>Smart Context-Aware Completion</b> - Relevant suggestions based on widget type - scrollbars show horizontal/vertical, checkboxes show checked/unchecked, with automatic popup triggers</li>
             <li><b>Smart Parser Recovery</b> - Intelligent parsing that isolates syntax errors (like missing braces) so the rest of your file stays error-free</li>
             <li><b>Intelligent Auto-Completion</b> - Auto-insert colons, close brackets, CSS units (px, pt, em), and suggest QSS functions (rgb, rgba, url, gradients)</li>
-            <li><b>Multiple Color Formats</b> - Full support for hex (#RRGGBB), RGB (rgb(r,g,b)), and RGBA (rgba(r,g,b,a)) colors</li>
+            <li><b>Background Color Highlighting</b> - See exact color values displayed as backgrounds (#FF0000 shows solid red). Smart text color adjusts automatically for readability using WCAG standards</li>
+            <li><b>Multiple Color Formats</b> - Full support for hex (#RRGGBB), RGB (rgb(r,g,b)), and RGBA (rgba(r,g,b,a)) with alpha transparency preservation</li>
             <li><b>Visual Color Picker</b> - Click gutter icons to edit colors with streamlined HSV, HSL, and RGB panels</li>
             <li><b>Format Preservation</b> - Automatically maintains your chosen color format (hex, RGB, or RGBA) when editing</li>
             <li><b>Color Palettes</b> - Create and manage reusable color palettes for consistent styling</li>
@@ -70,6 +72,10 @@
     <annotator
             language="QSS"
             implementationClass="io.github.avaxerrr.qsstoolkit.highlighting.QssColorAnnotator"/>
+
+    <annotator
+            language="QSS"
+            implementationClass="io.github.avaxerrr.qsstoolkit.highlighting.QssColorBackgroundAnnotator"/>
 
     <!-- Completion contributor (includes QssPropertyInsertHandler internally) -->
     <completion.contributor
