@@ -68,11 +68,11 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
                         colorList.selectedIndex = index
                         val selectedColor = colorList.selectedValue
                         if (selectedColor != null) {
-                            copyToClipboard(selectedColor.toHex())
-                            // Optional: Show a tooltip or status message that the color was copied
+                            // Copy in QSS-compatible format
+                            copyToClipboard(selectedColor.toQssFormat())
                             JOptionPane.showMessageDialog(
                                 panel,
-                                "Copied ${selectedColor.toHex()} to clipboard",
+                                "Copied ${selectedColor.toQssFormat()} to clipboard",
                                 "Color Copied",
                                 JOptionPane.INFORMATION_MESSAGE
                             )
@@ -84,17 +84,12 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
 
         colorList.addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent) {
-                // Check for Ctrl+C (or Cmd+C on Mac)
+                // Check for Ctrl+C or Cmd+C on Mac
                 if (e.isControlDown && e.keyCode == KeyEvent.VK_C) {
                     val selectedColor = colorList.selectedValue
                     if (selectedColor != null) {
-                        // Copy the hex value to clipboard
-                        val hexValue = selectedColor.toHex()
-                        val selection = StringSelection(hexValue)
-                        val clipboard = Toolkit.getDefaultToolkit().systemClipboard
-                        clipboard.setContents(selection, null)
-
-                        // Consume the event to prevent default copy
+                        // Copy in QSS-compatible format
+                        copyToClipboard(selectedColor.toQssFormat())
                         e.consume()
                     }
                 }
@@ -252,29 +247,48 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
         val properties = PropertiesComponent.getInstance()
         val lastPanel = properties.getValue(LAST_PANEL_KEY, "HSV")
 
-        // Try to select the last used panel
         val panels = colorChooser.chooserPanels
-        val targetPanel = panels.firstOrNull {
-            it.displayName.equals(lastPanel, ignoreCase = true)
-        } ?: panels.firstOrNull {
-            it.displayName.contains("HSV", ignoreCase = true) ||
-                    it.displayName.contains("HSL", ignoreCase = true) ||
-                    it.displayName.contains("HSB", ignoreCase = true)
-        } ?: panels.firstOrNull()
+        val targetIndex = panels.indexOfFirst { it.displayName.equals(lastPanel, ignoreCase = true) }
 
-        if (targetPanel != null) {
-            colorChooser.setChooserPanels(
-                panels.sortedBy { if (it == targetPanel) 0 else 1 }.toTypedArray()
-            )
+        if (targetIndex >= 0) {
+            // Reorder so the saved panel appears first and gets selected
+            val reordered = panels.toMutableList()
+            val selectedPanel = reordered.removeAt(targetIndex)
+            reordered.add(0, selectedPanel)
+            colorChooser.chooserPanels = reordered.toTypedArray()
         }
     }
 
     private fun saveSelectedPanel(colorChooser: JColorChooser) {
-        val selectedPanel = colorChooser.chooserPanels.firstOrNull()
-        if (selectedPanel != null) {
-            val properties = PropertiesComponent.getInstance()
-            properties.setValue(LAST_PANEL_KEY, selectedPanel.displayName)
+        // Find the JTabbedPane in the color chooser
+        val tabbedPane = findTabbedPane(colorChooser)
+
+        if (tabbedPane != null) {
+            val selectedIndex = tabbedPane.selectedIndex
+
+            // Map the selected tab index to the actual panel
+            val panels = colorChooser.chooserPanels
+            if (selectedIndex >= 0 && selectedIndex < panels.size) {
+                val selectedPanelName = panels[selectedIndex].displayName
+
+                // Save it to persistent storage
+                val properties = PropertiesComponent.getInstance()
+                properties.setValue(LAST_PANEL_KEY, selectedPanelName)
+            }
         }
+    }
+
+    private fun findTabbedPane(component: java.awt.Component): javax.swing.JTabbedPane? {
+        if (component is javax.swing.JTabbedPane) {
+            return component
+        }
+        if (component is java.awt.Container) {
+            for (child in component.components) {
+                val result = findTabbedPane(child)
+                if (result != null) return result
+            }
+        }
+        return null
     }
 
     companion object {
@@ -363,11 +377,21 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
         }
         menu.add(copyHexItem)
 
+        // NEW: Copy in QSS-compatible format (rgba if transparent, hex if opaque)
+        val copyQssFormatItem = JMenuItem("Copy QSS Format")
+        copyQssFormatItem.addActionListener {
+            val selectedColor = colorList.selectedValue
+            if (selectedColor != null) {
+                copyToClipboard(selectedColor.toQssFormat())
+            }
+        }
+        menu.add(copyQssFormatItem)
+
         val copyQssPropertyItem = JMenuItem("Copy as QSS Color Property")
         copyQssPropertyItem.addActionListener {
             val selectedColor = colorList.selectedValue
             if (selectedColor != null) {
-                copyToClipboard("color: ${selectedColor.toHex()};")
+                copyToClipboard("color: ${selectedColor.toQssFormat()};")
             }
         }
         menu.add(copyQssPropertyItem)
@@ -376,7 +400,7 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
         copyQssBackgroundItem.addActionListener {
             val selectedColor = colorList.selectedValue
             if (selectedColor != null) {
-                copyToClipboard("background-color: ${selectedColor.toHex()};")
+                copyToClipboard("background-color: ${selectedColor.toQssFormat()};")
             }
         }
         menu.add(copyQssBackgroundItem)

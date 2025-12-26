@@ -155,84 +155,53 @@ class QssValidationAnnotator : Annotator {
         var propertyNameEndElement: PsiElement? = null
         var foundColon = false
 
-        println("\n========== NEW DECLARATION ==========")
-
         var child = declaration.firstChild
-        var tokenCounter = 0
         while (child != null) {
             val type = child.node.elementType
 
-            println("TOKEN #\${tokenCounter++}: type=\${type}, text='\${child.text}'")
-
             if (!foundColon) {
-                // Accept IDENTIFIER, WIDGET_CLASS, KEYWORD
                 if (type == QssTokenTypes.IDENTIFIER ||
                     type == QssTokenTypes.WIDGET_CLASS ||
                     type == QssTokenTypes.KEYWORD) {
 
-                    println("   → CAPTURED as property part")
-
                     if (propertyName.isEmpty()) {
                         propertyNameStartElement = child
-                        println("   → Set as START element (offset: \${child.textRange.startOffset})")
                     }
                     propertyName += child.text
                     propertyNameEndElement = child
-                    println("   → propertyName is now: '\$propertyName'")
-                    println("   → Set as END element (offset: \${child.textRange.endOffset})")
 
                 } else if (type == QssTokenTypes.COLON) {
-                    println("   → COLON FOUND - Time to validate!")
                     foundColon = true
 
                     if (propertyName.isNotEmpty() && propertyNameStartElement != null && propertyNameEndElement != null) {
                         val normalizedProperty = propertyName.lowercase(Locale.getDefault())
-
-                        println("   → propertyName: '\$propertyName'")
-                        println("   → normalized: '\$normalizedProperty'")
 
                         val fullRange = TextRange(
                             propertyNameStartElement.textRange.startOffset,
                             propertyNameEndElement.textRange.endOffset
                         )
 
-                        println("   → fullRange: \${fullRange.startOffset} to \${fullRange.endOffset}")
-
                         if (!QssData.PROPERTY_TYPES.containsKey(normalizedProperty)) {
-                            println("   → ❌ Unknown property")
                             holder.newAnnotation(
                                 HighlightSeverity.ERROR,
-                                "Unknown property '\$propertyName'. Check spelling or refer to Qt documentation."
+                                "Unknown property '$propertyName'. Check spelling or refer to Qt documentation."
                             )
                                 .range(fullRange)
                                 .create()
                         } else {
-                            println("   → ✓ Property exists in map")
-
                             val document = propertyNameStartElement.containingFile.viewProvider.document
                             if (document != null) {
                                 val originalText = document.getText(fullRange)
-                                println("   → Document text at range: '\$originalText'")
-                                println("   → Has uppercase? \${originalText.any { it.isUpperCase() }}")
-
                                 if (originalText.any { it.isUpperCase() }) {
-                                    println("   → ⚠️ CREATING WARNING ANNOTATION")
                                     holder.newAnnotation(
-                                        HighlightSeverity.WEAK_WARNING,
-                                        "Property names should be lowercase. Use '\$normalizedProperty' instead of '\$originalText'"
+                                        HighlightSeverity.WARNING,
+                                        "Property names should be lowercase. Use '$normalizedProperty' instead of '$propertyName'."
                                     )
                                         .range(fullRange)
                                         .create()
-                                    println("   → ✅ Warning annotation created")
-                                } else {
-                                    println("   → ℹ️ No uppercase detected, no warning")
                                 }
-                            } else {
-                                println("   → ❌ Document is null!")
                             }
                         }
-                    } else {
-                        println("   → ⚠️ propertyName is empty or elements are null")
                     }
                 }
             } else {
@@ -251,8 +220,6 @@ class QssValidationAnnotator : Annotator {
             }
             child = child.nextSibling
         }
-
-        println("========== END DECLARATION ==========\n")
     }
 
     private fun validateValue(propertyName: String, valueElement: PsiElement, holder: AnnotationHolder) {
@@ -312,12 +279,12 @@ class QssValidationAnnotator : Annotator {
         val numberWithoutUnit = Regex("^-?\\d+(\\.\\d+)?$")
         if (text.matches(numberWithoutUnit)) {
             return ValidationResult.Invalid(
-                "Measurement requires a unit (px, pt, em, ex). Did you mean '\${text}px'?"
+                "Measurement requires a unit (px, pt, em, ex). Did you mean '${text}px'?"
             )
         }
 
         return ValidationResult.Invalid(
-            "Invalid measurement value '\$text'. Expected format: '10px', '1.5em', or '0'"
+            "Invalid measurement value '$text'. Expected format: '10px', '1.5em', or '0'"
         )
     }
 
@@ -328,7 +295,7 @@ class QssValidationAnnotator : Annotator {
             if (propertyName.lowercase() == "opacity" && numValue != null) {
                 if (numValue < 0.0 || numValue > 1.0) {
                     return ValidationResult.Warning(
-                        "Opacity value should be between 0.0 and 1.0. Value '\$text' will be clamped by Qt."
+                        "Opacity value should be between 0.0 and 1.0. Value '$text' will be clamped by Qt."
                     )
                 }
             }
@@ -341,7 +308,7 @@ class QssValidationAnnotator : Annotator {
         }
 
         return ValidationResult.Invalid(
-            "Invalid number value '\$text'. Expected a numeric value (e.g., '0.5', '1', '100')"
+            "Invalid number value '$text'. Expected a numeric value (e.g., '0.5', '1', '100')"
         )
     }
 
@@ -419,7 +386,7 @@ class QssValidationAnnotator : Annotator {
         }
 
         return ValidationResult.Invalid(
-            "Invalid color value '\$text'. Use hex (#RRGGBB), rgb(r,g,b), rgba(r,g,b,a), or a valid color name"
+            "Invalid color value '$text'. Use hex (#RRGGBB), rgb(r,g,b), rgba(r,g,b,a), or a valid color name"
         )
     }
 

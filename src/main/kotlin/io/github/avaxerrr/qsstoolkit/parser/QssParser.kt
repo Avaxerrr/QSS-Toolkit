@@ -132,7 +132,9 @@ class QssParser : PsiParser {
         val declMarker = builder.mark()
 
         // Property name
-        if (builder.tokenType == QssTokenTypes.IDENTIFIER) {
+        if (builder.tokenType == QssTokenTypes.IDENTIFIER ||
+            builder.tokenType == QssTokenTypes.WIDGET_CLASS ||
+            builder.tokenType == QssTokenTypes.KEYWORD) {
             builder.advanceLexer()
         } else {
             declMarker.drop()

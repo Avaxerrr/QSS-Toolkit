@@ -1,5 +1,4 @@
-// QSS Toolkit version 1.1
-
+// QSS Toolkit version 2.0
 package io.github.avaxerrr.qsstoolkit.actions
 
 import com.intellij.openapi.actionSystem.AnAction
@@ -12,10 +11,11 @@ import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.ide.util.PropertiesComponent
-import io.github.avaxerrr.qsstoolkit.lexer.QssTokenTypes
 import java.awt.Color
-import java.awt.event.ActionEvent
+import java.awt.Component
+import java.awt.Container
 import javax.swing.JColorChooser
+import javax.swing.JTabbedPane
 import javax.swing.SwingUtilities
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
@@ -42,21 +42,22 @@ class ChooseColorAction(
             val dialog = JColorChooser.createDialog(
                 editor.component,
                 "Choose Color",
-                true,  // modal
+                true, // modal
                 colorChooser,
-                { actionEvent ->
-                    // OK action - get the selected color from the chooser
+                { _ ->
+                    // OK action - FIRST, save the selected panel while dialog is still open
+                    saveSelectedPanel(colorChooser)
+
+                    // THEN get the selected color and update
                     val selectedColor = colorChooser.color
                     if (selectedColor != null) {
-                        // Save the selected panel for next time
-                        saveSelectedPanel(colorChooser)
-
-                        ApplicationManager.getApplication().invokeLater({
-                            updateColorInFile(project, editor, element, selectedColor)
-                        }, ModalityState.defaultModalityState())
+                        ApplicationManager.getApplication().invokeLater(
+                            { updateColorInFile(project, editor, element, selectedColor) },
+                            ModalityState.defaultModalityState()
+                        )
                     }
                 },
-                null  // Cancel action
+                null // Cancel action
             )
 
             dialog.isVisible = true
@@ -79,7 +80,7 @@ class ChooseColorAction(
         // Set filtered panels back
         colorChooser.chooserPanels = filteredPanels.toTypedArray()
 
-        // Restore last used panel or default to HSL/HSV
+        // Restore last used panel
         restoreSelectedPanel(colorChooser)
     }
 
@@ -87,29 +88,52 @@ class ChooseColorAction(
         val properties = PropertiesComponent.getInstance()
         val lastPanel = properties.getValue(LAST_PANEL_KEY, "HSV")
 
-        // Try to select the last used panel
         val panels = colorChooser.chooserPanels
-        val targetPanel = panels.firstOrNull {
-            it.displayName.equals(lastPanel, ignoreCase = true)
-        } ?: panels.firstOrNull {
-            it.displayName.contains("HSV", ignoreCase = true) ||
-                    it.displayName.contains("HSL", ignoreCase = true) ||
-                    it.displayName.contains("HSB", ignoreCase = true)
-        } ?: panels.firstOrNull()
+        val targetIndex = panels.indexOfFirst { it.displayName.equals(lastPanel, ignoreCase = true) }
 
-        if (targetPanel != null) {
-            colorChooser.setChooserPanels(
-                panels.sortedBy { if (it == targetPanel) 0 else 1 }.toTypedArray()
-            )
+        if (targetIndex >= 0) {
+            // Reorder so the saved panel appears first and gets selected
+            val reordered = panels.toMutableList()
+            val selectedPanel = reordered.removeAt(targetIndex)
+            reordered.add(0, selectedPanel)
+            colorChooser.chooserPanels = reordered.toTypedArray()
         }
     }
 
     private fun saveSelectedPanel(colorChooser: JColorChooser) {
-        val selectedPanel = colorChooser.chooserPanels.firstOrNull()
-        if (selectedPanel != null) {
-            val properties = PropertiesComponent.getInstance()
-            properties.setValue(LAST_PANEL_KEY, selectedPanel.displayName)
+        // Find the JTabbedPane in the color chooser
+        val tabbedPane = findTabbedPane(colorChooser)
+
+        if (tabbedPane != null) {
+            val selectedIndex = tabbedPane.selectedIndex
+
+            // Map the selected tab index to the actual panel
+            val panels = colorChooser.chooserPanels
+            if (selectedIndex >= 0 && selectedIndex < panels.size) {
+                val selectedPanelName = panels[selectedIndex].displayName
+
+                // Save it to persistent storage
+                val properties = PropertiesComponent.getInstance()
+                properties.setValue(LAST_PANEL_KEY, selectedPanelName)
+
+                println("✅ Saved color picker panel: $selectedPanelName")
+            }
+        } else {
+            println("⚠️ Could not find JTabbedPane in color chooser")
         }
+    }
+
+    private fun findTabbedPane(component: Component): JTabbedPane? {
+        if (component is JTabbedPane) {
+            return component
+        }
+        if (component is Container) {
+            for (child in component.components) {
+                val result = findTabbedPane(child)
+                if (result != null) return result
+            }
+        }
+        return null
     }
 
     private fun getEditorForElement(project: Project, element: PsiElement): Editor? {
@@ -124,23 +148,29 @@ class ChooseColorAction(
     }
 
     private fun updateColorInFile(project: Project, editor: Editor, element: PsiElement, color: Color) {
-        // Determine the original format and preserve it
         val originalText = element.text
+
         val newColorText = when {
-            // RGBA format: rgba(r, g, b, a)
-            originalText.startsWith("rgba(", ignoreCase = true) -> {
+            // RGBA format: rgba(r, g, b, a) - preserve it
+            originalText.startsWith("rgba", ignoreCase = true) -> {
                 val alpha = color.alpha / 255.0f
                 String.format("rgba(%d, %d, %d, %.2f)", color.red, color.green, color.blue, alpha)
             }
-            // RGB format: rgb(r, g, b)
-            originalText.startsWith("rgb(", ignoreCase = true) -> {
-                String.format("rgb(%d, %d, %d)", color.red, color.green, color.blue)
+            // RGB format: rgb(r, g, b) - if user added transparency, convert to rgba
+            originalText.startsWith("rgb", ignoreCase = true) -> {
+                if (color.alpha < 255) {
+                    val alpha = color.alpha / 255.0f
+                    String.format("rgba(%d, %d, %d, %.2f)", color.red, color.green, color.blue, alpha)
+                } else {
+                    String.format("rgb(%d, %d, %d)", color.red, color.green, color.blue)
+                }
             }
-            // Hex format (default): #RRGGBB
+            // Hex format: #RRGGBB - if user added transparency, convert to rgba (Qt doesn't support #RRGGBBAA reliably)
             else -> {
                 if (color.alpha < 255) {
-                    // If color has transparency, use 8-digit hex
-                    String.format("#%02X%02X%02X%02X", color.red, color.green, color.blue, color.alpha)
+                    // Convert to rgba() instead of 8-digit hex for Qt compatibility
+                    val alpha = color.alpha / 255.0f
+                    String.format("rgba(%d, %d, %d, %.2f)", color.red, color.green, color.blue, alpha)
                 } else {
                     // Standard 6-digit hex
                     String.format("#%02X%02X%02X", color.red, color.green, color.blue)

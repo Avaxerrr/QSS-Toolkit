@@ -17,33 +17,26 @@ repositories {
   }
 }
 
-// Configure dependencies
 dependencies {
-  // Coroutines support
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.7.3")
+  // Coroutines support - UPDATED
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.10.2")
 
   intellijPlatform {
-
     intellijIdeaCommunity("2025.1")
-
-    // Test framework
     testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
-
   }
 }
 
 intellijPlatform {
   pluginConfiguration {
     ideaVersion {
-      // Support from 2025.1 (build 241) onwards
       sinceBuild = "241"
-      // Allow until 2025.* versions
       untilBuild = "251.*"
     }
 
     changeNotes = """
-            <h3>Version xx (DON'T TOUCH THIS I WILL DECIDED WHICH VERSION TO PUT HERE) - November 2025</h3>
+            <h3>Version xx (DON'T TOUCH THIS I WILL DECIDED WHICH VERSION TO PUT HERE) - NO DATE YET WHEN I WILL RELEASE THIS</h3>
             <ul>
                 <li><b>Complete Qt 6.10 Support:</b> All 96 properties and 50 widgets with full Qt 5/6 backward compatibility</li>
                 <li><b>Advanced Selector Support:</b> 82 sub-controls (QScrollBar::handle) and 44 pseudo-states with intelligent chained syntax (QScrollBar::handle:vertical)</li>
@@ -76,8 +69,9 @@ intellijPlatform {
                 </li>
                 <li><b>Advanced Color Tools:</b>
                     <ul>
-                        <li><b>RGB/RGBA Support:</b> Full support with gutter previews and format preservation</li>
-                        <li><b>Streamlined Color Picker:</b> Optimized UI that remembers your preferred mode</li>
+                        <li><b>RGB/RGBA Support:</b> Full support with gutter previews and format preservation. Transparent colors automatically convert to rgba() for Qt compatibility</li>
+                        <li><b>Streamlined Color Picker:</b> Optimized UI with persistent color mode preference (HSV/HSL/RGB)</li>
+                        <li><b>Visual Gutter Icons:</b> Color previews with borders for transparent colors</li>
                         <li><b>Gradient Recognition:</b> Support for <code>qlineargradient()</code>, <code>qradialgradient()</code>, and <code>qconicalgradient()</code></li>
                     </ul>
                 </li>
@@ -103,7 +97,6 @@ intellijPlatform {
 }
 
 tasks {
-  // Set the JVM compatibility versions
   withType<JavaCompile> {
     sourceCompatibility = "21"
     targetCompatibility = "21"
@@ -113,7 +106,6 @@ tasks {
     kotlinOptions.jvmTarget = "21"
   }
 
-  // Disable building searchable options (speeds up build)
   buildSearchableOptions {
     enabled = false
   }
