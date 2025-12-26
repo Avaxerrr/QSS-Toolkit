@@ -15,7 +15,11 @@ class QssCompletionContributor : CompletionContributor() {
     init {
         // Property name and widget selector completion
         extend(CompletionType.BASIC,
-            PlatformPatterns.psiElement(QssTokenTypes.IDENTIFIER)
+            PlatformPatterns.psiElement()
+                .andOr(
+                    PlatformPatterns.psiElement(QssTokenTypes.IDENTIFIER),
+                    PlatformPatterns.psiElement(QssTokenTypes.WIDGET_CLASS)
+                )
                 .withLanguage(QssLanguage),
             QssPropertyCompletionProvider()
         )
@@ -43,7 +47,6 @@ class QssCompletionContributor : CompletionContributor() {
             QssValueCompletionProvider()
         )
 
-        // NEW: Chained pseudo-state completion (after sub-control)
         // This handles patterns like QScrollBar::handle:vertical
         extend(CompletionType.BASIC,
             PlatformPatterns.psiElement()
@@ -175,7 +178,6 @@ class QssCompletionContributor : CompletionContributor() {
         }
     }
 
-    // NEW: Chained pseudo-state completion provider
     // Handles: QScrollBar::handle:vertical, QPushButton:hover, etc.
     private class QssChainedPseudoStateProvider : CompletionProvider<CompletionParameters>() {
         override fun addCompletions(
@@ -321,7 +323,6 @@ class QssCompletionContributor : CompletionContributor() {
             // Look backwards from cursor position to find the widget selector
             val textBeforeCursor = fileText.substring(0, minOf(offset, fileText.length))
 
-            // Fixed regex: { doesn't need escaping inside character class
             val widgetPattern = Regex("""(Q[A-Za-z]+)(?:::|:|[\s{])""")
             val matches = widgetPattern.findAll(textBeforeCursor)
 
