@@ -168,7 +168,17 @@ object QssData {
         "QTableView" to listOf("::item"),
         "QToolBox" to listOf("::tab"),
         "QToolButton" to listOf("::menu-button", "::menu-indicator", "::menu-arrow"),
-        "QTreeView" to listOf("::item", "::branch")
+        "QTreeView" to listOf("::item", "::branch"),
+        "QPushButton" to emptyList(),
+        "QLabel" to emptyList(),
+        "QLineEdit" to emptyList(),
+        "QTextEdit" to emptyList(),
+        "QPlainTextEdit" to emptyList(),
+        "QFrame" to emptyList(),
+        "QWidget" to emptyList(),
+        "QDialog" to emptyList(),
+        "QMainWindow" to emptyList(),
+        "QStatusBar" to emptyList()
     )
 
     // Common Subcontrols fallback

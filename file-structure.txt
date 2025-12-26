@@ -31,9 +31,9 @@ QSS Toolkit/
 |         |                        |    +--- ChooseColorAction.kt
 |         |                        |    \--- CreateQssFileAction.kt
 |         |                        |    
-|         |                        +--- commenter
 |         |                        +--- completion
 |         |                        |    +--- QssCompletionContributor.kt
+|         |                        |    +--- QssData.kt
 |         |                        |    \--- QssPropertyInsertHandler.kt
 |         |                        |    
 |         |                        +--- editing
@@ -77,6 +77,9 @@ QSS Toolkit/
 |         |                        |    +--- QssStructureViewFactory.kt
 |         |                        |    \--- QssStructureViewModel.kt
 |         |                        |    
+|         |                        +--- validation
+|         |                        |    \--- QssValidationAnnotator.kt
+|         |                        |    
 |         |                        +--- QssFileType.kt
 |         |                        +--- QssIcons.kt
 |         |                        \--- QssLanguage.kt
@@ -92,9 +95,10 @@ QSS Toolkit/
 |                   |    
 |                   +--- plugin.xml
 |                   \--- pluginIcon.svg
-|    
+|
 +--- file-structure.txt
 +--- gradle.properties
 +--- gradlew
++--- qss-syntax-scrapper.py
 +--- README.md
 \--- Update-roadmap.md
