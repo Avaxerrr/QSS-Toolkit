@@ -1,6 +1,5 @@
 // QSS Toolkit version 1.1
 
-
 package io.github.avaxerrr.qsstoolkit.lexer
 
 import com.intellij.lexer.LexerBase
@@ -16,30 +15,18 @@ class QssLexer : LexerBase() {
     private var currentToken: IElementType? = null
 
     companion object {
-        // QSS keyword values (property values that are predefined)
-        // These are primarily property names, not values
         private val KEYWORDS = setOf(
-            // Border styles
             "none", "solid", "dashed", "dotted", "double", "groove", "ridge", "inset", "outset",
-            // Colors (named colors)
             "transparent", "white", "black", "red", "green", "blue", "yellow", "cyan", "magenta",
             "gray", "grey", "darkred", "darkgreen", "darkblue", "darkcyan", "darkmagenta", "darkyellow",
             "lightgray", "lightgrey",
-            // Font weights
             "normal", "bold", "bolder", "lighter",
-            // Font styles
             "italic", "oblique",
-            // Text decoration
             "underline", "overline", "line-through",
-            // Text alignment (only when used as VALUES, not property names)
             "left", "right", "center", "top", "bottom", "middle",
-            // Display
             "block", "inline", "inline-block",
-            // Boolean/special
             "true", "false", "on", "off", "yes", "no",
-            // Repeat
             "repeat", "repeat-x", "repeat-y", "no-repeat",
-            // Qt-specific positioning (when used as values)
             "stretch", "fixed"
         )
     }
@@ -53,13 +40,8 @@ class QssLexer : LexerBase() {
     }
 
     override fun getState(): Int = 0
-
-    override fun getTokenType(): IElementType? {
-        return currentToken
-    }
-
+    override fun getTokenType(): IElementType? = currentToken
     override fun getTokenStart(): Int = tokenStart
-
     override fun getTokenEnd(): Int = tokenEnd
 
     override fun advance() {
@@ -77,16 +59,14 @@ class QssLexer : LexerBase() {
                 scanWhitespace()
                 currentToken = QssTokenTypes.WHITE_SPACE
             }
-            // Handle Template Tags {{...}}
             buffer[currentPosition] == '{' && currentPosition + 1 < bufferEnd &&
                     buffer[currentPosition + 1] == '{' -> {
                 scanTemplateTag()
                 currentToken = QssTokenTypes.TEMPLATE_TAG
             }
-            // Handle double-colon pseudo-elements (::item)
             buffer[currentPosition] == ':' && currentPosition + 1 < bufferEnd &&
                     buffer[currentPosition + 1] == ':' -> {
-                currentPosition += 2 // Skip the ::
+                currentPosition += 2
                 if (currentPosition < bufferEnd && isIdentifierStart(buffer[currentPosition])) {
                     scanIdentifier()
                     currentToken = QssTokenTypes.PSEUDO_ELEMENT
@@ -94,9 +74,8 @@ class QssLexer : LexerBase() {
                     currentToken = QssTokenTypes.COLON
                 }
             }
-            // Handle single-colon pseudo-states (:hover, :active)
             buffer[currentPosition] == ':' -> {
-                currentPosition++ // Skip the :
+                currentPosition++
                 if (currentPosition < bufferEnd && isIdentifierStart(buffer[currentPosition])) {
                     scanIdentifier()
                     currentToken = QssTokenTypes.PSEUDO_STATE
@@ -104,13 +83,11 @@ class QssLexer : LexerBase() {
                     currentToken = QssTokenTypes.COLON
                 }
             }
-            // Handle comments
             buffer[currentPosition] == '/' && currentPosition + 1 < bufferEnd &&
                     (buffer[currentPosition + 1] == '/' || buffer[currentPosition + 1] == '*') -> {
                 scanComment()
                 currentToken = QssTokenTypes.COMMENT
             }
-            // Handle standalone slash
             buffer[currentPosition] == '/' -> {
                 currentPosition++
                 currentToken = QssTokenTypes.SLASH
@@ -183,14 +160,12 @@ class QssLexer : LexerBase() {
             isIdentifierStart(buffer[currentPosition]) -> {
                 val start = currentPosition
                 scanIdentifier()
-                val text = buffer.substring(start, currentPosition) // Keep case for check
+                val text = buffer.substring(start, currentPosition)
                 val lowerText = text.lowercase()
 
-                // Check for Functions
                 if (currentPosition < bufferEnd && buffer[currentPosition] == '(') {
                     if (lowerText == "url") {
-                        scanUrl()
-                        currentToken = QssTokenTypes.URL
+                        currentToken = QssTokenTypes.URL  // This is correct!
                     } else if (lowerText == "rgb" || lowerText == "rgba") {
                         scanParenthesisBlock()
                         currentToken = if (lowerText == "rgb") QssTokenTypes.RGB_FUNCTION else QssTokenTypes.RGBA_FUNCTION
@@ -219,9 +194,8 @@ class QssLexer : LexerBase() {
         tokenEnd = currentPosition
     }
 
-    // Scans {{...}}
     private fun scanTemplateTag() {
-        currentPosition += 2 // Skip {{
+        currentPosition += 2
         while (currentPosition + 1 < bufferEnd) {
             if (buffer[currentPosition] == '}' && buffer[currentPosition + 1] == '}') {
                 currentPosition += 2
@@ -229,7 +203,6 @@ class QssLexer : LexerBase() {
             }
             currentPosition++
         }
-        // If EOF reached without closing, just consume until end
         currentPosition = bufferEnd
     }
 
@@ -253,17 +226,6 @@ class QssLexer : LexerBase() {
         }
     }
 
-    private fun scanUrl() {
-        if (currentPosition < bufferEnd && buffer[currentPosition] == '(') {
-            currentPosition++
-            while (currentPosition < bufferEnd && buffer[currentPosition] != ')') {
-                currentPosition++
-            }
-            if (currentPosition < bufferEnd && buffer[currentPosition] == ')') {
-                currentPosition++
-            }
-        }
-    }
 
     private fun scanWhitespace() {
         while (currentPosition < bufferEnd && isWhitespace(buffer[currentPosition])) {
@@ -350,7 +312,10 @@ class QssLexer : LexerBase() {
 
     private fun scanIdentifier() {
         while (currentPosition < bufferEnd &&
-            (isIdentifierPart(buffer[currentPosition]) || buffer[currentPosition] == '-')) {
+            (isIdentifierPart(buffer[currentPosition]) ||
+                    buffer[currentPosition] == '-' ||
+                    buffer[currentPosition] == '/' ||  // For paths
+                    buffer[currentPosition] == '.')) { // For extensions
             currentPosition++
         }
     }

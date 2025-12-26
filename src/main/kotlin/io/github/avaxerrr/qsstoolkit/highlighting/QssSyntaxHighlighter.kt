@@ -21,7 +21,7 @@ class QssSyntaxHighlighter : SyntaxHighlighterBase() {
 
             // Selectors & Structure
             QssTokenTypes.WIDGET_CLASS -> QSS_WIDGET_CLASS  // QPushButton (Purple/Bold)
-            QssTokenTypes.IDENTIFIER -> QSS_PROPERTY        // background-color (Cyan/Yellow - DISTINCT!)
+            QssTokenTypes.IDENTIFIER -> QSS_PROPERTY        // background-color (Cyan/Yellow)
             QssTokenTypes.HASH -> QSS_ID_SELECTOR           // # in #myButton (Purple/Bold)
             QssTokenTypes.DOT -> QSS_CLASS_SELECTOR         // . in .myClass (Purple/Bold)
             QssTokenTypes.ASTERISK -> QSS_OPERATOR          // * universal selector
@@ -74,16 +74,16 @@ class QssSyntaxHighlighter : SyntaxHighlighterBase() {
 
     companion object {
         // ═══════════════════════════════════════════════════════════════════════════
-        // STRUCTURE & SELECTORS - THE REAL FIX (OPTION 4)
+        // STRUCTURE & SELECTORS
         // ═══════════════════════════════════════════════════════════════════════════
 
-        // Widget class names (QPushButton, QLabel) - PURPLE (always visible)
+        // Widget class names (QPushButton, QLabel) - PURPLE
         val QSS_WIDGET_CLASS = TextAttributesKey.createTextAttributesKey(
             "QSS_WIDGET_CLASS",
             DefaultLanguageHighlighterColors.CONSTANT
         )
 
-        // Property names (background-color, padding) - CYAN/YELLOW (GUARANTEED DISTINCT!)
+        // Property names (background-color, padding) - CYAN/YELLOW
         // INSTANCE_METHOD is NEVER the same color as CONSTANT in any theme
         val QSS_PROPERTY = TextAttributesKey.createTextAttributesKey(
             "QSS_PROPERTY",
