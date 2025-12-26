@@ -77,31 +77,20 @@ class QssValidationAnnotator : Annotator {
         val selectorText = getSelectorText(rule)
         if (selectorText.isEmpty()) return
 
-        var currentWidget: String? = null
+        // Find all sub-controls (::name) and validate each against its immediate parent widget
+        val subControlPattern = Pattern.compile("::([a-zA-Z0-9-]+)")
+        val matcher = subControlPattern.matcher(selectorText)
 
-        for (widget in QssData.WIDGET_SELECTORS) {
-            if (selectorText.startsWith(widget)) {
-                currentWidget = widget
-                break
-            }
-        }
+        while (matcher.find()) {
+            val subControlName = matcher.group(1)
+            val fullSubControl = "::" + subControlName
+            val subControlStartPos = matcher.start()
 
-        if (currentWidget == null) {
-            for (widget in QssData.WIDGET_SELECTORS) {
-                if (selectorText.contains(widget, ignoreCase = false)) {
-                    currentWidget = widget
-                    break
-                }
-            }
-        }
+            // Find the widget immediately before this sub-control
+            val ownerWidget = findWidgetBeforeSubControl(selectorText, subControlStartPos)
 
-        if (currentWidget != null) {
-            val matcher = Pattern.compile("::([a-zA-Z0-9-]+)").matcher(selectorText)
-            while (matcher.find()) {
-                val subControlName = matcher.group(1)
-                val fullSubControl = "::" + subControlName
-
-                val widgetSubControls = QssData.WIDGET_SUBCONTROLS[currentWidget]
+            if (ownerWidget != null && QssData.WIDGET_SELECTORS.contains(ownerWidget)) {
+                val widgetSubControls = QssData.WIDGET_SUBCONTROLS[ownerWidget]
 
                 if (widgetSubControls != null) {
                     if (!widgetSubControls.contains(fullSubControl)) {
@@ -110,19 +99,20 @@ class QssValidationAnnotator : Annotator {
 
                         holder.newAnnotation(
                             HighlightSeverity.ERROR,
-                            "'$fullSubControl' is not a valid sub-control for $currentWidget. Valid sub-controls: ${widgetSubControls.joinToString(", ")}"
+                            "'$fullSubControl' is not a valid sub-control for $ownerWidget. Valid sub-controls: ${widgetSubControls.joinToString(", ")}"
                         )
                             .range(TextRange(startOffset, endOffset))
                             .create()
                     }
                 } else {
+                    // Widget exists but has no defined sub-controls in our data
                     if (!QssData.COMMON_SUBCONTROLS.contains(fullSubControl)) {
                         val startOffset = rule.textRange.startOffset + matcher.start()
                         val endOffset = rule.textRange.startOffset + matcher.end()
 
                         holder.newAnnotation(
                             HighlightSeverity.WARNING,
-                            "'$fullSubControl' may not be supported by $currentWidget"
+                            "'$fullSubControl' may not be supported by $ownerWidget"
                         )
                             .range(TextRange(startOffset, endOffset))
                             .create()
@@ -131,6 +121,7 @@ class QssValidationAnnotator : Annotator {
             }
         }
 
+        // Validate widget casing (keep existing logic)
         var child = rule.firstChild
         while (child != null) {
             if (child.node.elementType == QssTokenTypes.LBRACE) break
@@ -147,6 +138,22 @@ class QssValidationAnnotator : Annotator {
             }
             child = child.nextSibling
         }
+    }
+
+    private fun findWidgetBeforeSubControl(selectorText: String, subControlPosition: Int): String? {
+        // Get text before the ::
+        val textBefore = selectorText.substring(0, subControlPosition).trim()
+
+        // Pattern to find widget names (start with capital letter)
+        // Looks for the LAST widget before the :: position
+        val widgetPattern = Pattern.compile("\\b([A-Z][A-Za-z0-9]*)\\s*$")
+        val matcher = widgetPattern.matcher(textBefore)
+
+        if (matcher.find()) {
+            return matcher.group(1)
+        }
+
+        return null
     }
 
     private fun validateDeclaration(declaration: PsiElement, holder: AnnotationHolder) {
@@ -261,6 +268,36 @@ class QssValidationAnnotator : Annotator {
         return text.matches(Regex("^\\{\\{[^}]+\\}\\}$"))
     }
 
+    private fun validateColor(text: String): ValidationResult {
+        if (text.matches(Regex("^#[0-9a-fA-F]{3}$")) ||
+            text.matches(Regex("^#[0-9a-fA-F]{6}$"))) {
+            return ValidationResult.Valid
+        }
+
+        val lower = text.lowercase()
+
+        if (lower.startsWith("rgb(") || lower.startsWith("rgba(") ||
+            lower.startsWith("hsv(") || lower.startsWith("hsva(") ||
+            lower.startsWith("hsl(") || lower.startsWith("hsla(") ||
+            lower.startsWith("qlineargradient(") ||
+            lower.startsWith("qradialgradient(") ||
+            lower.startsWith("qconicalgradient(")) {
+            return ValidationResult.Valid
+        }
+
+        if (lower == "palette" || lower == "transparent" || lower == "none") {
+            return ValidationResult.Valid
+        }
+
+        if (isValidNamedColor(lower)) {
+            return ValidationResult.Valid
+        }
+
+        return ValidationResult.Invalid(
+            "Invalid color value '$text'. Use hex (#RRGGBB), rgb(r,g,b), rgba(r,g,b,a), or a valid color name"
+        )
+    }
+
     private fun validateMeasurement(text: String): ValidationResult {
         if (text == "0" || text == "0.0") {
             return ValidationResult.Valid
@@ -358,36 +395,6 @@ class QssValidationAnnotator : Annotator {
         }
 
         return ValidationResult.Valid
-    }
-
-    private fun validateColor(text: String): ValidationResult {
-        if (text.matches(Regex("^#[0-9a-fA-F]{3}$")) ||
-            text.matches(Regex("^#[0-9a-fA-F]{6}$"))) {
-            return ValidationResult.Valid
-        }
-
-        val lower = text.lowercase()
-
-        if (lower.startsWith("rgb(") || lower.startsWith("rgba(") ||
-            lower.startsWith("hsv(") || lower.startsWith("hsva(") ||
-            lower.startsWith("hsl(") || lower.startsWith("hsla(") ||
-            lower.startsWith("qlineargradient(") ||
-            lower.startsWith("qradialgradient(") ||
-            lower.startsWith("qconicalgradient(")) {
-            return ValidationResult.Valid
-        }
-
-        if (lower == "palette" || lower == "transparent" || lower == "none") {
-            return ValidationResult.Valid
-        }
-
-        if (isValidNamedColor(lower)) {
-            return ValidationResult.Valid
-        }
-
-        return ValidationResult.Invalid(
-            "Invalid color value '$text'. Use hex (#RRGGBB), rgb(r,g,b), rgba(r,g,b,a), or a valid color name"
-        )
     }
 
     private fun isValidNamedColor(colorName: String): Boolean {

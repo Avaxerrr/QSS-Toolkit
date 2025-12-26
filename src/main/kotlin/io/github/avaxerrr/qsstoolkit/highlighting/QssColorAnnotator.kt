@@ -1,4 +1,4 @@
-// QSS Toolkit version 1.1
+// QSS Toolkit version 1.2 - UPDATED
 
 package io.github.avaxerrr.qsstoolkit.highlighting
 
@@ -16,7 +16,6 @@ class QssColorAnnotator : Annotator {
         if (element.node.elementType == QssTokenTypes.HEX_COLOR) {
             val colorText = element.text
             val hexColor = colorText.removePrefix("#")
-
             val color = try {
                 convertHexToColor(hexColor)
             } catch (e: Exception) {
@@ -26,7 +25,7 @@ class QssColorAnnotator : Annotator {
             if (color != null) {
                 holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
                     .range(element)
-                    .textAttributes(QssSyntaxHighlighter.QSS_COLOR)
+                    .textAttributes(QssSyntaxHighlighter.QSS_HEX_COLOR)
                     .gutterIconRenderer(ColorBoxIconRenderer(color, colorText, element))
                     .create()
             }
@@ -40,7 +39,7 @@ class QssColorAnnotator : Annotator {
             if (color != null) {
                 holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
                     .range(element)
-                    .textAttributes(QssSyntaxHighlighter.QSS_COLOR)
+                    .textAttributes(QssSyntaxHighlighter.QSS_FUNCTION)
                     .gutterIconRenderer(ColorBoxIconRenderer(color, colorText, element))
                     .create()
             }
@@ -54,7 +53,7 @@ class QssColorAnnotator : Annotator {
             if (color != null) {
                 holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
                     .range(element)
-                    .textAttributes(QssSyntaxHighlighter.QSS_COLOR)
+                    .textAttributes(QssSyntaxHighlighter.QSS_FUNCTION)
                     .gutterIconRenderer(ColorBoxIconRenderer(color, colorText, element))
                     .create()
             }
@@ -64,7 +63,6 @@ class QssColorAnnotator : Annotator {
         if (element is QssColorValue) {
             val colorText = element.colorText ?: return
             val hexColor = colorText.removePrefix("#")
-
             val color = try {
                 convertHexToColor(hexColor)
             } catch (e: Exception) {
@@ -102,11 +100,10 @@ class QssColorAnnotator : Annotator {
         }
     }
 
-    // Parse rgb(r, g, b) format
     private fun parseRgbFunction(text: String): Color? {
         try {
-            // Extract content between parentheses: rgb(255, 0, 0) -> "255, 0, 0"
-            val match = Regex("""rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)""").find(text)
+            val pattern = "rgb" + "\\(" + "(\\d+)" + ",\\s*" + "(\\d+)" + ",\\s*" + "(\\d+)" + "\\)"
+            val match = Regex(pattern).find(text)
             if (match != null) {
                 val (r, g, b) = match.destructured
                 val red = r.toInt().coerceIn(0, 255)
@@ -115,16 +112,15 @@ class QssColorAnnotator : Annotator {
                 return Color(red, green, blue)
             }
         } catch (e: Exception) {
-            // Invalid format, return null
+            return null
         }
         return null
     }
 
-    // Parse rgba(r, g, b, a) format
     private fun parseRgbaFunction(text: String): Color? {
         try {
-            // Extract content: rgba(0, 0, 255, 0.5) -> "0, 0, 255, 0.5"
-            val match = Regex("""rgba\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)""").find(text)
+            val pattern = "rgba" + "\\(" + "(\\d+)" + ",\\s*" + "(\\d+)" + ",\\s*" + "(\\d+)" + ",\\s*" + "([0-9.]+)" + "\\)"
+            val match = Regex(pattern).find(text)
             if (match != null) {
                 val (r, g, b, a) = match.destructured
                 val red = r.toInt().coerceIn(0, 255)
@@ -134,7 +130,7 @@ class QssColorAnnotator : Annotator {
                 return Color(red, green, blue, alpha)
             }
         } catch (e: Exception) {
-            // Invalid format, return null
+            return null
         }
         return null
     }
