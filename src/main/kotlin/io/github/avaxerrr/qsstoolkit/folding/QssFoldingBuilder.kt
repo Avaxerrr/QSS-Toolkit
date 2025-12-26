@@ -1,5 +1,3 @@
-// QSS Toolkit version 1.1
-
 package io.github.avaxerrr.qsstoolkit.folding
 
 import com.intellij.lang.ASTNode

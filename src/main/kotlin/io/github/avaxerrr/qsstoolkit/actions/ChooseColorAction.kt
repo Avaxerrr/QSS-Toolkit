@@ -1,4 +1,3 @@
-// QSS Toolkit version 2.0
 package io.github.avaxerrr.qsstoolkit.actions
 
 import com.intellij.openapi.actionSystem.AnAction
@@ -165,7 +164,7 @@ class ChooseColorAction(
                     String.format("rgb(%d, %d, %d)", color.red, color.green, color.blue)
                 }
             }
-            // Hex format: #RRGGBB - if user added transparency, convert to rgba (Qt doesn't support #RRGGBBAA reliably)
+            // Hex format: #RRGGBB - if user added transparency, convert to rgba
             else -> {
                 if (color.alpha < 255) {
                     // Convert to rgba() instead of 8-digit hex for Qt compatibility

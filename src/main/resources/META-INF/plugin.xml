@@ -128,6 +128,10 @@
     <!-- Validation annotator -->
     <annotator language="QSS" implementationClass="io.github.avaxerrr.qsstoolkit.validation.QssValidationAnnotator"/>
 
+    <!-- Auto-popup completion trigger -->
+    <typedHandler
+            implementation="io.github.avaxerrr.qsstoolkit.completion.QssCompletionAutoPopup"/>
+
   </extensions>
 
   <actions>
@@ -136,7 +140,7 @@
             class="io.github.avaxerrr.qsstoolkit.actions.CreateQssFileAction"
             text="QSS File"
             description="Create a new QSS style sheet file">
-      <add-to-group group-id="NewGroup" anchor="after" relative-to-action="NewPythonFile"/>
+      <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFile"/>
     </action>
   </actions>
 </idea-plugin>

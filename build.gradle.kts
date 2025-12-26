@@ -1,4 +1,4 @@
-// QSS Toolkit version 1.2
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   id("java")
@@ -18,12 +18,12 @@ repositories {
 }
 
 dependencies {
-  // Coroutines support - UPDATED
+  // Coroutines support
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.10.2")
 
   intellijPlatform {
-    intellijIdeaCommunity("2025.1")
+    intellijIdeaCommunity("2025.1")  // Keep only this one
     testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
   }
 }
@@ -113,7 +113,9 @@ tasks {
   }
 
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions.jvmTarget = "21"
+    compilerOptions {
+      jvmTarget.set(JvmTarget.JVM_21)
+    }
   }
 
   buildSearchableOptions {

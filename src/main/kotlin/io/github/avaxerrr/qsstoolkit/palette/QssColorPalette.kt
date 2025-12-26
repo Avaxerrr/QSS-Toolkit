@@ -1,5 +1,3 @@
-// QSS Toolkit version 1.1
-
 package io.github.avaxerrr.qsstoolkit.palette
 
 import java.io.Serializable

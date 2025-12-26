@@ -1,7 +1,6 @@
-// QSS Toolkit version 1.1
-
 package io.github.avaxerrr.qsstoolkit.editing
 
+import com.intellij.codeInsight.AutoPopupController
 import com.intellij.codeInsight.editorActions.TypedHandlerDelegate
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.ex.EditorEx
@@ -22,6 +21,20 @@ class QssTypedHandler : TypedHandlerDelegate() {
             '{' -> handleLeftBrace(editor, file)
             '(' -> handleLeftParen(editor, file)
             '[' -> handleLeftBracket(editor, file)
+        }
+
+        return Result.CONTINUE
+    }
+
+    override fun checkAutoPopup(charTyped: Char, project: Project, editor: Editor, file: PsiFile): Result {
+        // Use the same check pattern as charTyped method
+        if (file.language != QssLanguage) {
+            return Result.CONTINUE
+        }
+
+        // Auto-trigger completion after typing ':'
+        if (charTyped == ':') {
+            AutoPopupController.getInstance(project).scheduleAutoPopup(editor)
         }
 
         return Result.CONTINUE

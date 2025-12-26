@@ -1,5 +1,3 @@
-// QSS Toolkit version 1.1
-
 package io.github.avaxerrr.qsstoolkit.editing
 
 import com.intellij.lang.Commenter

@@ -1,5 +1,3 @@
-// QSS Toolkit version 1.1
-
 package io.github.avaxerrr.qsstoolkit.lexer
 
 import com.intellij.lexer.LexerBase

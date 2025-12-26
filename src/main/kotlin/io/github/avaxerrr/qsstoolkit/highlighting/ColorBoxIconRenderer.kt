@@ -1,5 +1,3 @@
-// QSS Toolkit version 1.1
-
 package io.github.avaxerrr.qsstoolkit.highlighting
 
 import com.intellij.openapi.actionSystem.AnAction

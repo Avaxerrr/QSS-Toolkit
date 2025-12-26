@@ -1,5 +1,3 @@
-// QSS Toolkit version 1.1
-
 package io.github.avaxerrr.qsstoolkit.completion
 
 /**
@@ -73,6 +71,7 @@ object QssData {
         "image" to PropertyType.BORDER, // Relaxed
         "image-position" to PropertyType.STRING,
         "left" to PropertyType.MEASUREMENT,
+        "letter-spacing" to PropertyType.MEASUREMENT,
         "lineedit-password-character" to PropertyType.NUMBER,
         "margin" to PropertyType.MEASUREMENT,
         "margin-bottom" to PropertyType.MEASUREMENT,
@@ -113,7 +112,8 @@ object QssData {
         "titlebar-show-maximize-button" to PropertyType.NUMBER,
         "titlebar-show-minimize-button" to PropertyType.NUMBER,
         "top" to PropertyType.MEASUREMENT,
-        "width" to PropertyType.MEASUREMENT
+        "width" to PropertyType.MEASUREMENT,
+        "word-spacing" to PropertyType.MEASUREMENT
     )
 
     // Helper for CompletionContributor

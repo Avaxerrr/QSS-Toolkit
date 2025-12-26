@@ -1,5 +1,3 @@
-// QSS Toolkit version 2.0
-
 package io.github.avaxerrr.qsstoolkit.completion
 
 import com.intellij.codeInsight.completion.*
@@ -53,26 +51,6 @@ class QssCompletionContributor : CompletionContributor() {
                 .withLanguage(QssLanguage),
             QssChainedPseudoStateProvider()
         )
-    }
-
-    // This method tells IntelliJ to auto-trigger completion after :: and :
-    @Deprecated("Deprecated in IntelliJ Platform 2024.2+")
-    override fun invokeAutoPopup(position: PsiElement, typeChar: Char): Boolean {
-        // Auto-trigger after second colon in ::
-        if (typeChar == ':') {
-            val text = position.containingFile.text
-            val offset = position.textRange.startOffset
-
-            // Check if previous character is also a colon (for ::)
-            if (offset > 0 && text.getOrNull(offset - 1) == ':') {
-                return true  // Auto-trigger for sub-controls
-            }
-
-            // Also auto-trigger for property values and chained pseudo-states
-            return true
-        }
-
-        return false
     }
 
     // Standard widget selectors and properties completion provider

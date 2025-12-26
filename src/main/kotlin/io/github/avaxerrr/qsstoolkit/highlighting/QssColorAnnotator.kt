@@ -1,5 +1,3 @@
-// QSS Toolkit version 1.2 - UPDATED
-
 package io.github.avaxerrr.qsstoolkit.highlighting
 
 import com.intellij.lang.annotation.AnnotationHolder
