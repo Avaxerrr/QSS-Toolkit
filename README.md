@@ -18,7 +18,7 @@
 
 Stop switching between your IDE and external editors when styling Qt applications. QSS Toolkit brings **professional Qt Style Sheet support** directly into your JetBrains IDE with intelligent completion, real-time validation, and visual color tools.
 
-![Screenshot Placeholder](https://github.com/user-attachments/assets/765b8f77-733c-4fb2-9cf6-dffd556bb36f)
+<img width="2559" height="1439" alt="Screenshot 2025-12-26 211437" src="https://github.com/user-attachments/assets/7f580ce9-3a24-46cc-b368-74d240507285"/>
 
 ---
 
