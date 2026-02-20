@@ -32,6 +32,7 @@ QSS Toolkit/
 |         |                        |    \--- CreateQssFileAction.kt
 |         |                        |    
 |         |                        +--- completion
+|         |                        |    +--- QssCompletionAutoPopup.kt
 |         |                        |    +--- QssCompletionContributor.kt
 |         |                        |    +--- QssData.kt
 |         |                        |    \--- QssPropertyInsertHandler.kt
@@ -97,11 +98,8 @@ QSS Toolkit/
 |                   +--- plugin.xml
 |                   \--- pluginIcon.svg
 |    
-+--- checklist of broken features for the new validator and error detection.txt
-+--- error-detection-and-validation-implementation.md
 +--- file-structure.txt
 +--- gradle.properties
 +--- gradlew
 +--- qss-syntax-scrapper.py
-+--- README.md
-\--- Update-roadmap.md
+\--- README.md

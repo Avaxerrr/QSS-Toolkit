@@ -9,6 +9,11 @@
 
         <p>Professional Qt Style Sheet (QSS) editing support for all IntelliJ Platform-based IDEs. Perfect for Qt developers working in C++, Python, or any other Qt-supported language.</p>
 
+        <h3>New in Version 2.0.1</h3>
+        <ul>
+            <li><b>Bug Fix:</b> Fixed <code>palette()</code>, <code>hsv()</code>, <code>hsva()</code>, <code>hsl()</code>, and <code>hsla()</code> color functions being incorrectly flagged as invalid by the validator.</li>
+        </ul>
+
         <h3>New in Version 2.0</h3>
         <ul>
             <li><b>Robust Error Detection</b> - Real-time validation for property names and values. Catch typos like "pading" or invalid values like "width: red" before you run your app.</li>

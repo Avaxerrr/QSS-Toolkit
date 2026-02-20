@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "io.github.avaxerrr"
-version = "2.0"
+version = "2.0.1"
 
 repositories {
   mavenCentral()
@@ -29,6 +29,10 @@ dependencies {
 }
 
 intellijPlatform {
+  publishing {
+    token = providers.environmentVariable("PUBLISH_TOKEN")
+  }
+
   pluginConfiguration {
     ideaVersion {
       sinceBuild = "241"
@@ -36,6 +40,11 @@ intellijPlatform {
     }
 
     changeNotes = """
+            <h3>Version 2.0.1 - February 2026</h3>
+            <ul>
+                <li><b>Bug Fix:</b> Fixed <code>palette()</code>, <code>hsv()</code>, <code>hsva()</code>, <code>hsl()</code>, and <code>hsla()</code> color functions being incorrectly flagged as invalid color values by the validator. These are fully valid Qt QSS color functions and should produce no errors. Reported by @TheDogHusky.</li>
+            </ul>
+
             <h3>Version 2.0 - December 2025</h3>
             <ul>
                 <li><b>Complete Qt 6.10 Support:</b> All 96 properties and 50 widgets with full Qt 5/6 backward compatibility</li>

@@ -38,9 +38,10 @@ interface QssTokenTypes {
         val TEMPLATE_TAG = QssElementType("TEMPLATE_TAG") // {{...}}
 
         // Color functions
-        val RGB_FUNCTION = QssElementType("RGB_FUNCTION")    // rgb(...)
-        val RGBA_FUNCTION = QssElementType("RGBA_FUNCTION")  // rgba(...)
-        val GRADIENT = QssElementType("GRADIENT")            // qlineargradient(...)
+        val RGB_FUNCTION = QssElementType("RGB_FUNCTION")       // rgb(...)
+        val RGBA_FUNCTION = QssElementType("RGBA_FUNCTION")     // rgba(...)
+        val GRADIENT = QssElementType("GRADIENT")               // qlineargradient(...)
+        val COLOR_FUNCTION = QssElementType("COLOR_FUNCTION")   // palette(...), hsv(...), hsva(...), hsl(...), hsla(...)
 
         // Special selectors
         val HASH = QssElementType("HASH") // #

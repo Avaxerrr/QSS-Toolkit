@@ -163,13 +163,17 @@ class QssLexer : LexerBase() {
 
                 if (currentPosition < bufferEnd && buffer[currentPosition] == '(') {
                     if (lowerText == "url") {
-                        currentToken = QssTokenTypes.URL  // This is correct!
+                        currentToken = QssTokenTypes.URL
                     } else if (lowerText == "rgb" || lowerText == "rgba") {
                         scanParenthesisBlock()
                         currentToken = if (lowerText == "rgb") QssTokenTypes.RGB_FUNCTION else QssTokenTypes.RGBA_FUNCTION
                     } else if (lowerText.startsWith("q") && lowerText.endsWith("gradient")) {
                         scanParenthesisBlock()
                         currentToken = QssTokenTypes.GRADIENT
+                    } else if (lowerText == "palette" || lowerText == "hsv" || lowerText == "hsva" ||
+                               lowerText == "hsl" || lowerText == "hsla") {
+                        scanParenthesisBlock()
+                        currentToken = QssTokenTypes.COLOR_FUNCTION
                     } else {
                         currentToken = QssTokenTypes.IDENTIFIER
                     }

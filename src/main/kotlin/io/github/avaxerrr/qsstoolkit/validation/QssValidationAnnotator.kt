@@ -285,7 +285,7 @@ class QssValidationAnnotator : Annotator {
             return ValidationResult.Valid
         }
 
-        if (lower == "palette" || lower == "transparent" || lower == "none") {
+        if (lower.startsWith("palette(") || lower == "transparent" || lower == "none") {
             return ValidationResult.Valid
         }
 
