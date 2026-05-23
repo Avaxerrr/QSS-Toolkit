@@ -4,9 +4,13 @@ import io.github.avaxerrr.qsstoolkit.palette.QssColorPaletteManager
 import io.github.avaxerrr.qsstoolkit.palette.QssColor
 import io.github.avaxerrr.qsstoolkit.palette.QssColorFormat
 import io.github.avaxerrr.qsstoolkit.palette.QssColorFormats
+import io.github.avaxerrr.qsstoolkit.palette.QssColorPaletteFileException
+import io.github.avaxerrr.qsstoolkit.palette.QssColorPaletteFileFormat
+import io.github.avaxerrr.qsstoolkit.palette.QssColorPaletteFilter
 import java.awt.Color
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -161,6 +165,18 @@ class QssColorPaletteManagerTest {
     }
 
     @Test
+    fun `removes multiple palettes together`() {
+        val manager = QssColorPaletteManager()
+        val first = manager.createPalette("First")
+        val second = manager.createPalette("Second")
+        val third = manager.createPalette("Third")
+
+        assertEquals(2, manager.removePalettes(listOf(first, third)))
+
+        assertEquals(listOf(second), manager.getAllPalettes())
+    }
+
+    @Test
     fun `moves colors within and between palettes`() {
         val manager = QssColorPaletteManager()
         val source = manager.createPalette("Source")
@@ -254,5 +270,102 @@ class QssColorPaletteManagerTest {
         subscription.close()
         manager.addColor(palette, Color.GREEN)
         assertEquals(3, changeCount)
+    }
+
+    @Test
+    fun `filters palettes by folder name color name and color value`() {
+        val manager = QssColorPaletteManager()
+        val theme = manager.createPalette("Theme")
+        val brand = manager.createPalette("Brand")
+        manager.addColor(theme, Color(0x33, 0x66, 0x99), "Accent")
+        manager.addColor(theme, Color.WHITE, "Text")
+        manager.addColor(brand, Color(0xFF, 0x33, 0x66), "Warning")
+
+        val folderMatch = QssColorPaletteFilter.filter(manager.getAllPalettes(), "theme")
+        assertEquals(listOf(theme), folderMatch.map { it.palette })
+        assertEquals(theme.getAllColors(), folderMatch.single().colors)
+
+        val colorNameMatch = QssColorPaletteFilter.filter(manager.getAllPalettes(), "warning")
+        assertEquals(listOf(brand), colorNameMatch.map { it.palette })
+        assertEquals(listOf(brand.getAllColors().single()), colorNameMatch.single().colors)
+
+        val valueMatch = QssColorPaletteFilter.filter(manager.getAllPalettes(), "rgb(51, 102, 153)")
+        assertEquals(listOf(theme), valueMatch.map { it.palette })
+        assertEquals(listOf(theme.getAllColors().first()), valueMatch.single().colors)
+    }
+
+    @Test
+    fun `exports palettes to qsspalette json`() {
+        val manager = QssColorPaletteManager()
+        val palette = manager.createPalette("Theme")
+        manager.addColor(palette, Color(0x33, 0x66, 0x99, 128), "Overlay")
+
+        val json = QssColorPaletteFileFormat.exportPalettes(manager.getAllPalettes())
+
+        assertTrue(json.contains("\"schema\": \"qss-toolkit.palette\""))
+        assertTrue(json.contains("\"version\": 1"))
+        assertTrue(json.contains("\"name\": \"Theme\""))
+        assertTrue(json.contains("\"name\": \"Overlay\""))
+        assertTrue(json.contains("\"value\": \"#33669980\""))
+    }
+
+    @Test
+    fun `imports qsspalette json by appending uniquely named folders and colors`() {
+        val manager = QssColorPaletteManager()
+        val existing = manager.createPalette("Theme")
+        manager.addColor(existing, Color.BLACK, "Accent")
+
+        val result = QssColorPaletteFileFormat.importInto(
+            manager,
+            """
+                {
+                  "schema": "qss-toolkit.palette",
+                  "version": 1,
+                  "palettes": [
+                    {
+                      "name": "Theme",
+                      "colors": [
+                        { "name": "Accent", "value": "#336699" },
+                        { "name": "Accent", "value": "#FF3366" },
+                        { "name": "Bad", "value": "palette(WindowText)" }
+                      ]
+                    }
+                  ]
+                }
+            """.trimIndent()
+        )
+
+        val imported = manager.getAllPalettes()[1]
+        assertEquals(1, result.importedPalettes)
+        assertEquals(2, result.importedColors)
+        assertEquals(1, result.skippedColors.size)
+        assertEquals("Theme 2", imported.name)
+        assertEquals(listOf("Accent", "Accent 2"), imported.getAllColors().map { it.name })
+        assertEquals(listOf("#336699", "#FF3366"), imported.getAllColors().map { it.toHex() })
+    }
+
+    @Test
+    fun `rejects unsupported palette file versions`() {
+        val manager = QssColorPaletteManager()
+
+        assertFailsWith<QssColorPaletteFileException> {
+            QssColorPaletteFileFormat.importInto(
+                manager,
+                """
+                    {
+                      "schema": "qss-toolkit.palette",
+                      "version": 2,
+                      "palettes": []
+                    }
+                """.trimIndent()
+            )
+        }
+    }
+
+    @Test
+    fun `accepts qsspalette and json files for import`() {
+        assertTrue(QssColorPaletteFileFormat.isSupportedImportFileName("theme.qsspalette"))
+        assertTrue(QssColorPaletteFileFormat.isSupportedImportFileName("theme.json"))
+        assertFalse(QssColorPaletteFileFormat.isSupportedImportFileName("theme.txt"))
     }
 }

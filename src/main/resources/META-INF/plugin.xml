@@ -14,7 +14,8 @@
             <li><b>IDE Compatibility:</b> Added support for 2026 JetBrains IDE builds.</li>
             <li><b>QSS Syntax:</b> Added more Qt stylesheet properties, pseudo-states, sub-controls, and icon properties for completion and validation.</li>
             <li><b>Validation:</b> Fixed false warnings and errors for Qt-specific properties, <code>qproperty-*</code> declarations, and border values that use Qt color functions.</li>
-            <li><b>QSS Colors Panel:</b> Revamped the color side panel with folders, quick rename, drag/drop organization, multi-select actions, live updates, and editable opacity-aware swatches.</li>
+            <li><b>QSS Colors Panel:</b> Revamped the color side panel with folders, search, quick rename, drag/drop organization, multi-select actions, live updates, and editable opacity-aware swatches.</li>
+            <li><b>Palette Sharing:</b> Added safe append-only import and export for color folders using JSON-backed <code>.qsspalette</code> files.</li>
             <li><b>Editor Context Menu:</b> Added <code>Insert Color</code> and <code>Save Color</code> actions for working with saved colors directly from the editor.</li>
             <li><b>Color Tools:</b> Added support for HSL and HSV color values in validation, highlighting, copy, and insert actions.</li>
         </ul>
@@ -26,7 +27,7 @@
             <li><b>Real-time Validation:</b> Detects unknown properties, invalid values, incorrect units, malformed declarations, and common QSS mistakes while you edit.</li>
             <li><b>Qt-aware Syntax Handling:</b> Supports Qt-specific properties, <code>qproperty-*</code> declarations, palette roles, gradients, icon properties, and template placeholders such as <code>{{BUTTON_COLOR}}</code>.</li>
             <li><b>Visual Color Tools:</b> Shows color previews, opens a color picker from gutter icons, and preserves useful color formats when editing values.</li>
-            <li><b>Reusable Color Folders:</b> Save, rename, edit, organize, drag/drop, copy, and insert reusable colors from the QSS Colors tool window.</li>
+            <li><b>Reusable Color Folders:</b> Save, search, rename, edit, organize, drag/drop, copy, import, export, and insert reusable colors from the QSS Colors tool window.</li>
             <li><b>Editor Color Actions:</b> Use the editor context menu to insert saved colors or save a selected color without leaving the file.</li>
             <li><b>Color Format Support:</b> Works with hex, RGB/RGBA, HSL/HSLA, HSV/HSVA, palette colors, transparent values, and Qt gradients.</li>
             <li><b>Universal JetBrains IDE Support:</b> Works in CLion, PyCharm, IntelliJ IDEA, WebStorm, Rider, and other IntelliJ Platform IDEs.</li>
@@ -46,6 +47,10 @@
               implementationClass="io.github.avaxerrr.qsstoolkit.QssFileType"
               language="QSS"
               extensions="qss"/>
+
+    <fileType name="QSS Palette"
+              implementationClass="io.github.avaxerrr.qsstoolkit.palette.QssPaletteFileType"
+              extensions="qsspalette"/>
 
     <!-- Syntax highlighter -->
     <lang.syntaxHighlighterFactory

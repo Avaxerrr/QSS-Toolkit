@@ -13,6 +13,9 @@ object QssIcons {
     val FOLDER = IconLoader.getIcon("/icons/qssColorFolder.svg", QssIcons::class.java)
 
     @JvmField
+    val PALETTE_FILE = IconLoader.getIcon("/icons/qssPaletteFile.svg", QssIcons::class.java)
+
+    @JvmField
     val INSERT_COLOR = IconLoader.getIcon("/icons/qssInsertColor.svg", QssIcons::class.java)
 
     @JvmField
