@@ -42,13 +42,12 @@ intellijPlatform {
     changeNotes = """
             <h3>Upcoming - Version TBD</h3>
             <ul>
+                <li><b>QSS Colors Panel:</b> Revamped saved color folders with search, drag/drop organization, multi-select actions, and import/export for sharing color collections.</li>
+                <li><b>Editor Context Menu:</b> Added <code>Insert Color</code> and <code>Save Color</code> actions for saved colors.</li>
+                <li><b>Color Tools:</b> Added HSL and HSV support for validation, highlighting, copy, and insert actions.</li>
+                <li><b>QSS Syntax:</b> Expanded Qt stylesheet properties, pseudo-states, sub-controls, and icon properties for completion and validation.</li>
+                <li><b>Validation:</b> Fixed false warnings for Qt-specific properties, <code>qproperty-*</code> declarations, and border values that use Qt color functions.</li>
                 <li><b>IDE Compatibility:</b> Added support for 2026 JetBrains IDE builds.</li>
-                <li><b>QSS Syntax:</b> Added more Qt stylesheet properties, pseudo-states, sub-controls, and icon properties for completion and validation.</li>
-                <li><b>Validation:</b> Fixed false warnings and errors for Qt-specific properties, <code>qproperty-*</code> declarations, and border values that use Qt color functions.</li>
-                <li><b>QSS Colors Panel:</b> Revamped the color side panel with folders, search, quick rename, drag/drop organization, multi-select actions, live updates, and editable opacity-aware swatches.</li>
-                <li><b>Palette Sharing:</b> Added safe append-only import and export for color folders using JSON-backed <code>.qsspalette</code> files.</li>
-                <li><b>Editor Context Menu:</b> Added <code>Insert Color</code> and <code>Save Color</code> actions for working with saved colors directly from the editor.</li>
-                <li><b>Color Tools:</b> Added support for HSL and HSV color values in validation, highlighting, copy, and insert actions.</li>
             </ul>
 
             <h3>Version 2.0.1 - February 2026</h3>
