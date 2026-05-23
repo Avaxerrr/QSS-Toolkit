@@ -31,6 +31,14 @@ class QssColorPaletteManager : PersistentStateComponent<QssColorPaletteManager.S
 
     private val palettes = mutableListOf<QssColorPalette>()
     private val state = State()
+    private val changeListeners = mutableListOf<() -> Unit>()
+
+    fun addChangeListener(listener: () -> Unit): AutoCloseable {
+        changeListeners.add(listener)
+        return AutoCloseable {
+            changeListeners.remove(listener)
+        }
+    }
 
     fun createPalette(requestedName: String? = null): QssColorPalette {
         val paletteName = requestedName.toCleanName()
@@ -93,12 +101,39 @@ class QssColorPaletteManager : PersistentStateComponent<QssColorPaletteManager.S
         return true
     }
 
+    fun updateColor(palette: QssColorPalette, color: QssColor, value: Color): Boolean {
+        if (palette.indexOfColor(color) < 0) return false
+
+        color.value = value
+        updateState()
+        return true
+    }
+
     fun removeColor(palette: QssColorPalette, color: QssColor): Boolean {
         val removed = palette.removeColor(color)
         if (removed) {
             updateState()
         }
         return removed
+    }
+
+    fun removeColors(selections: List<ColorSelection>): Int {
+        val groupedSelections = selections.groupBy { it.palette }
+        var removedCount = 0
+
+        for ((palette, group) in groupedSelections) {
+            for (selection in group) {
+                if (palette.removeColor(selection.color)) {
+                    removedCount++
+                }
+            }
+        }
+
+        if (removedCount > 0) {
+            updateState()
+        }
+
+        return removedCount
     }
 
     fun movePalette(palette: QssColorPalette, targetIndex: Int): Boolean {
@@ -146,7 +181,44 @@ class QssColorPaletteManager : PersistentStateComponent<QssColorPaletteManager.S
         return true
     }
 
-    fun updateState() {
+    fun moveColors(
+        sourcePalette: QssColorPalette,
+        colors: List<QssColor>,
+        targetPalette: QssColorPalette,
+        targetIndex: Int
+    ): Boolean {
+        if (colors.isEmpty()) return false
+
+        val selectedColors = colors.toIdentitySet()
+        val sourceColors = sourcePalette.getAllColors()
+        val movingColors = sourceColors.filter { it in selectedColors }
+        if (movingColors.isEmpty()) return false
+
+        if (sourcePalette === targetPalette) {
+            val boundedTargetIndex = targetIndex.coerceIn(0, sourceColors.size)
+            val selectedBeforeTarget = sourceColors
+                .take(boundedTargetIndex)
+                .count { it in selectedColors }
+            val insertionIndex = boundedTargetIndex - selectedBeforeTarget
+            val remainingColors = sourceColors.filterNot { it in selectedColors }
+            val newColors = remainingColors.toMutableList()
+            newColors.addAll(insertionIndex.coerceIn(0, newColors.size), movingColors)
+            if (newColors.sameIdentityOrder(sourceColors)) return false
+
+            sourcePalette.replaceColors(newColors)
+        } else {
+            val targetColors = targetPalette.getAllColors().toMutableList()
+            val insertionIndex = targetIndex.coerceIn(0, targetColors.size)
+            sourcePalette.replaceColors(sourceColors.filterNot { it in selectedColors })
+            targetColors.addAll(insertionIndex, movingColors)
+            targetPalette.replaceColors(targetColors)
+        }
+
+        updateState()
+        return true
+    }
+
+    private fun updateState() {
         state.palettes.clear()
 
         for (palette in palettes) {
@@ -156,12 +228,14 @@ class QssColorPaletteManager : PersistentStateComponent<QssColorPaletteManager.S
             for (color in palette.getAllColors()) {
                 val serColor = SerializableColor()
                 serColor.name = color.name
-                serColor.hexValue = color.toHex()
+                serColor.hexValue = color.toStorageHex()
                 serPalette.colors.add(serColor)
             }
 
             state.palettes.add(serPalette)
         }
+
+        notifyChangeListeners()
     }
 
     override fun getState(): State = state
@@ -225,9 +299,31 @@ class QssColorPaletteManager : PersistentStateComponent<QssColorPaletteManager.S
         return this?.trim()?.takeIf { it.isNotEmpty() }
     }
 
+    private fun notifyChangeListeners() {
+        for (listener in changeListeners.toList()) {
+            listener()
+        }
+    }
+
+    data class ColorSelection(
+        val palette: QssColorPalette,
+        val color: QssColor
+    )
+
     companion object {
         fun getInstance(project: Project): QssColorPaletteManager {
             return project.getService(QssColorPaletteManager::class.java)
         }
     }
+}
+
+private fun List<QssColor>.toIdentitySet(): Set<QssColor> {
+    return java.util.Collections.newSetFromMap(java.util.IdentityHashMap<QssColor, Boolean>()).apply {
+        addAll(this@toIdentitySet)
+    }
+}
+
+private fun List<QssColor>.sameIdentityOrder(other: List<QssColor>): Boolean {
+    if (size != other.size) return false
+    return indices.all { this[it] === other[it] }
 }

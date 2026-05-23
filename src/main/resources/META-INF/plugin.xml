@@ -5,60 +5,35 @@
   <vendor email="zonemaxq@gmail.com" url="https://github.com/avaxerrr">avaxerrr</vendor>
 
   <description><![CDATA[
-        <h2>QSS Toolkit - Complete Qt Style Sheet Support for JetBrains IDEs</h2>
+        <h2>QSS Toolkit - Qt Style Sheet Support for JetBrains IDEs</h2>
 
-        <p>Professional Qt Style Sheet (QSS) editing support for all IntelliJ Platform-based IDEs. Perfect for Qt developers working in C++, Python, or any other Qt-supported language.</p>
+        <p>QSS Toolkit adds dedicated Qt Style Sheet editing support to JetBrains IDEs. It helps you write, validate, navigate, and manage QSS files for Qt applications directly inside your editor.</p>
 
         <h3>Upcoming - Version TBD</h3>
         <ul>
-            <li><b>IDE Compatibility:</b> Updated the declared support range to IDE builds 242 through 262.*. Build 242 (2024.2) is the minimum because the plugin is compiled for Java 21.</li>
-            <li><b>QSS Syntax:</b> Added missing Qt stylesheet entries used by completion and validation, including <code>-qt-background-role</code>, <code>-qt-style-features</code>, <code>widget-animation-duration</code>, <code>lineedit-password-mask-delay</code>, Qt standard <code>*-icon</code> properties, <code>:exclusive</code>, <code>:non-exclusive</code>, and <code>::tearoff</code>.</li>
-            <li><b>Validation:</b> Fixed false errors for leading-hyphen Qt properties and dynamic <code>qproperty-*</code> declarations such as <code>qproperty-wordWrap</code>.</li>
-            <li><b>Bug Fix:</b> Fixed a false weak warning on complete border declarations that use Qt color functions, such as <code>border: 1px solid palette(WindowText);</code>.</li>
-            <li><b>Color Folders:</b> Redesigned the color palette tool window as a folder-style tree with automatic folder/color names, inline rename, context menu rename, drag/drop reordering, moving colors between folders, non-modal copy feedback, and additional RGB/RGBA copy formats.</li>
-        </ul>
-
-        <h3>New in Version 2.0.1</h3>
-        <ul>
-            <li><b>Bug Fix:</b> Fixed <code>palette()</code>, <code>hsv()</code>, <code>hsva()</code>, <code>hsl()</code>, and <code>hsla()</code> color functions being incorrectly flagged as invalid by the validator.</li>
-        </ul>
-
-        <h3>New in Version 2.0</h3>
-        <ul>
-            <li><b>Robust Error Detection</b> - Real-time validation for property names and values. Catch typos like "pading" or invalid values like "width: red" before you run your app.</li>
-            <li><b>Template Support</b> - Native support for Jinja2/QString templates (e.g., <code>{{BUTTON_COLOR}}</code>). The parser correctly handles and highlights variable tags without throwing syntax errors.</li>
-            <li><b>Enhanced Highlighting</b> - Brand new semantic color scheme: Widgets (Teal), Properties (Blue), Keywords (Orange), and Templates are visually distinct for better readability.</li>
-            <li><b>Visual Color Backgrounds</b> - See actual colors displayed as backgrounds with smart contrast-aware text. Colors are shown exactly as they appear in your UI.</li>
+            <li><b>IDE Compatibility:</b> Added support for 2026 JetBrains IDE builds.</li>
+            <li><b>QSS Syntax:</b> Added more Qt stylesheet properties, pseudo-states, sub-controls, and icon properties for completion and validation.</li>
+            <li><b>Validation:</b> Fixed false warnings and errors for Qt-specific properties, <code>qproperty-*</code> declarations, and border values that use Qt color functions.</li>
+            <li><b>QSS Colors Panel:</b> Revamped the color side panel with folders, quick rename, drag/drop organization, multi-select actions, live updates, and editable opacity-aware swatches.</li>
+            <li><b>Editor Context Menu:</b> Added <code>Insert Color</code> and <code>Save Color</code> actions for working with saved colors directly from the editor.</li>
+            <li><b>Color Tools:</b> Added support for HSL and HSV color values in validation, highlighting, copy, and insert actions.</li>
         </ul>
 
         <h3>Key Features</h3>
         <ul>
-            <li><b>Complete Qt 6.10 Coverage</b> - Full support for all 96 QSS properties and 50 styleable widgets with Qt 5/6 backward compatibility</li>
-            <li><b>Advanced Selector Support</b> - 82 sub-controls (::handle, ::drop-down) and 44 pseudo-states (:hover, :checked) with intelligent chained syntax (QScrollBar::handle:vertical)</li>
-            <li><b>Smart Context-Aware Completion</b> - Relevant suggestions based on widget type - scrollbars show horizontal/vertical, checkboxes show checked/unchecked, with automatic popup triggers</li>
-            <li><b>Smart Parser Recovery</b> - Intelligent parsing that isolates syntax errors (like missing braces) so the rest of your file stays error-free</li>
-            <li><b>Intelligent Auto-Completion</b> - Auto-insert colons, close brackets, CSS units (px, pt, em), and suggest QSS functions (rgb, rgba, url, gradients)</li>
-            <li><b>Background Color Highlighting</b> - See exact color values displayed as backgrounds (#FF0000 shows solid red). Smart text color adjusts automatically for readability using WCAG standards</li>
-            <li><b>Multiple Color Formats</b> - Full support for hex (#RRGGBB), RGB (rgb(r,g,b)), and RGBA (rgba(r,g,b,a)) with alpha transparency preservation</li>
-            <li><b>Visual Color Picker</b> - Click gutter icons to edit colors with streamlined HSV, HSL, and RGB panels</li>
-            <li><b>Format Preservation</b> - Automatically maintains your chosen color format (hex, RGB, or RGBA) when editing</li>
-            <li><b>Color Palettes</b> - Create and manage reusable color palettes for consistent styling</li>
-            <li><b>Code Navigation</b> - Structure view, code folding, and hierarchical selector navigation</li>
-        </ul>
-
-        <h3>Works Everywhere</h3>
-        <p>Compatible with all JetBrains IDEs - no language-specific dependencies required:</p>
-        <ul>
-            <li><b>CLion</b> - C++ Qt development (no Python dependency!)</li>
-            <li><b>PyCharm</b> - Python Qt (PySide6, PyQt6, PySide2, PyQt5)</li>
-            <li><b>IntelliJ IDEA</b> - Java Qt (QtJambi)</li>
-            <li><b>WebStorm</b> - Qt for WebAssembly projects</li>
-            <li><b>Rider</b> - .NET Qt development</li>
-            <li><b>All other IntelliJ Platform IDEs</b></li>
+            <li><b>QSS Language Support:</b> Syntax highlighting, parsing, code folding, structure view, comments, bracket matching, and smart editing for <code>.qss</code> files.</li>
+            <li><b>Completion for Qt Stylesheets:</b> Suggestions for Qt widgets, properties, values, sub-controls, pseudo-states, and chained selectors such as <code>QScrollBar::handle:vertical</code>.</li>
+            <li><b>Real-time Validation:</b> Detects unknown properties, invalid values, incorrect units, malformed declarations, and common QSS mistakes while you edit.</li>
+            <li><b>Qt-aware Syntax Handling:</b> Supports Qt-specific properties, <code>qproperty-*</code> declarations, palette roles, gradients, icon properties, and template placeholders such as <code>{{BUTTON_COLOR}}</code>.</li>
+            <li><b>Visual Color Tools:</b> Shows color previews, opens a color picker from gutter icons, and preserves useful color formats when editing values.</li>
+            <li><b>Reusable Color Folders:</b> Save, rename, edit, organize, drag/drop, copy, and insert reusable colors from the QSS Colors tool window.</li>
+            <li><b>Editor Color Actions:</b> Use the editor context menu to insert saved colors or save a selected color without leaving the file.</li>
+            <li><b>Color Format Support:</b> Works with hex, RGB/RGBA, HSL/HSLA, HSV/HSVA, palette colors, transparent values, and Qt gradients.</li>
+            <li><b>Universal JetBrains IDE Support:</b> Works in CLion, PyCharm, IntelliJ IDEA, WebStorm, Rider, and other IntelliJ Platform IDEs.</li>
         </ul>
 
         <h3>Quick Start</h3>
-        <p>Install the plugin and open any .qss file. All features work immediately with no configuration needed. Use Ctrl+Space for intelligent completion suggestions.</p>
+        <p>Open any <code>.qss</code> file to use highlighting, completion, validation, navigation, and color tools. Use the QSS Colors tool window for reusable colors, and right-click in the editor to insert or save colors.</p>
   ]]></description>
 
   <!-- Product and plugin compatibility requirements -->
@@ -156,5 +131,12 @@
             description="Create a new QSS style sheet file">
       <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFile"/>
     </action>
+
+    <group id="QssToolkit.EditorColors"
+           class="io.github.avaxerrr.qsstoolkit.actions.QssEditorColorsActionGroup"
+           text="QSS Toolkit"
+           popup="true">
+      <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+    </group>
   </actions>
 </idea-plugin>

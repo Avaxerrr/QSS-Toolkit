@@ -1,18 +1,19 @@
 package io.github.avaxerrr.qsstoolkit.palette
 
 import com.intellij.ide.util.PropertiesComponent
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.IconLoader
+import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.wm.StatusBar
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.content.ContentFactory
 import com.intellij.ui.treeStructure.Tree
+import io.github.avaxerrr.qsstoolkit.QssIcons
+import io.github.avaxerrr.qsstoolkit.ui.QssColorSwatchIcon
 import java.awt.BorderLayout
-import java.awt.Color
 import java.awt.Component
-import java.awt.Graphics
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
@@ -23,11 +24,11 @@ import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.AbstractAction
 import javax.swing.DropMode
-import javax.swing.Icon
 import javax.swing.JButton
 import javax.swing.JColorChooser
 import javax.swing.JComponent
 import javax.swing.JLabel
+import javax.swing.JMenu
 import javax.swing.JMenuItem
 import javax.swing.JPanel
 import javax.swing.JPopupMenu
@@ -48,11 +49,12 @@ class QssColorPaletteToolWindowFactory : ToolWindowFactory {
         val content = ContentFactory.getInstance().createContent(
             toolWindowContent.getContent(), "Color Folders", false
         )
+        content.setDisposer(toolWindowContent)
         toolWindow.contentManager.addContent(content)
     }
 }
 
-class QssColorPaletteToolWindowContent(private val project: Project) {
+class QssColorPaletteToolWindowContent(private val project: Project) : Disposable {
     private val paletteManager = QssColorPaletteManager.getInstance(project)
     private val panel = JPanel(BorderLayout())
     private val rootNode = DefaultMutableTreeNode(ROOT_LABEL)
@@ -63,6 +65,11 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
     private val addColorButton = JButton("Add Color")
     private val removeButton = JButton("Remove")
     private val renameButton = JButton("Rename")
+    private val paletteChangeSubscription = paletteManager.addChangeListener {
+        SwingUtilities.invokeLater {
+            refreshTree(getSelectionAnchorItem())
+        }
+    }
 
     init {
         setupUI()
@@ -110,7 +117,7 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
         tree.isEditable = true
         tree.toggleClickCount = 0
         tree.cellRenderer = PaletteTreeCellRenderer()
-        tree.selectionModel.selectionMode = TreeSelectionModel.SINGLE_TREE_SELECTION
+        tree.selectionModel.selectionMode = TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION
         tree.dragEnabled = true
         tree.dropMode = DropMode.ON_OR_INSERT
         tree.transferHandler = PaletteTreeTransferHandler(paletteManager) { selectedItem ->
@@ -123,7 +130,7 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
         )
         tree.actionMap.put(COPY_SELECTED_COLOR_ACTION, object : AbstractAction() {
             override fun actionPerformed(e: java.awt.event.ActionEvent?) {
-                (getSelectedNode()?.userObject as? QssColor)?.let { color ->
+                getSingleSelectedColor()?.let { color ->
                     copyToClipboard(color.toQssFormat())
                 }
             }
@@ -143,7 +150,9 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
             }
 
             override fun mouseClicked(e: MouseEvent) {
-                if (SwingUtilities.isLeftMouseButton(e) && e.clickCount == 2) {
+                if (SwingUtilities.isLeftMouseButton(e) && e.clickCount == 1) {
+                    handleColorSwatchClick(e)
+                } else if (SwingUtilities.isLeftMouseButton(e) && e.clickCount == 2) {
                     handleDoubleClick(e)
                 }
             }
@@ -151,21 +160,36 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
     }
 
     private fun showColorChooser(palette: QssColorPalette) {
+        showColorChooser(palette, null)
+    }
+
+    private fun showColorChooser(palette: QssColorPalette, color: QssColor?) {
         SwingUtilities.invokeLater {
             val colorChooser = JColorChooser()
+            if (color != null) {
+                colorChooser.color = color.value
+            }
             configureColorChooserPanels(colorChooser)
 
             val dialog = JColorChooser.createDialog(
                 panel,
-                "Choose Color",
+                if (color == null) "Choose Color" else "Edit Color",
                 true,
                 colorChooser,
                 {
                     val selectedColor = colorChooser.color
                     if (selectedColor != null) {
                         saveSelectedPanel(colorChooser)
-                        val color = paletteManager.addColor(palette, selectedColor)
-                        refreshTree(color)
+                        val selectedItem = if (color == null) {
+                            paletteManager.addColor(palette, selectedColor)
+                        } else if (paletteManager.updateColor(palette, color, selectedColor)) {
+                            color
+                        } else {
+                            null
+                        }
+                        if (selectedItem != null) {
+                            refreshTree(selectedItem)
+                        }
                     }
                 },
                 null
@@ -271,10 +295,10 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
     }
 
     private fun updateButtonState() {
-        val selectedNode = getSelectedNode()
+        val selectedNodes = getSelectedNodes()
         addColorButton.isEnabled = getSelectedPalette() != null
-        renameButton.isEnabled = selectedNode != null
-        removeButton.isEnabled = selectedNode != null
+        renameButton.isEnabled = selectedNodes.size == 1
+        removeButton.isEnabled = canRemoveSelection()
     }
 
     private fun handlePopup(e: MouseEvent) {
@@ -282,7 +306,9 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
 
         val path = tree.getPathForLocation(e.x, e.y)
         if (path != null) {
-            tree.selectionPath = path
+            if (!tree.isPathSelected(path)) {
+                tree.selectionPath = path
+            }
         } else {
             tree.clearSelection()
         }
@@ -300,17 +326,21 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
         }
     }
 
+    private fun handleColorSwatchClick(e: MouseEvent) {
+        val path = tree.getPathForLocation(e.x, e.y) ?: return
+        val rowBounds = tree.getPathBounds(path) ?: return
+        if (e.x < rowBounds.x || e.x > rowBounds.x + COLOR_SWATCH_HIT_WIDTH) return
+
+        val color = path.nodeUserObject() as? QssColor ?: return
+        val palette = (path.lastPathComponent as? DefaultMutableTreeNode)?.parentPalette() ?: return
+        tree.selectionPath = path
+        showColorChooser(palette, color)
+    }
+
     private fun createContextMenu(): JPopupMenu {
         val menu = JPopupMenu()
-        val selectedNode = getSelectedNode()
-        val selectedValue = selectedNode?.userObject
-
-        menu.add(JMenuItem("Add Folder").apply {
-            addActionListener {
-                val palette = paletteManager.createPalette()
-                refreshTree(palette)
-            }
-        })
+        val selectedNodes = getSelectedNodes()
+        val selectedValue = selectedNodes.singleOrNull()?.userObject
 
         if (selectedValue is QssColorPalette) {
             menu.add(JMenuItem("Add Color").apply {
@@ -320,7 +350,16 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
             })
         }
 
-        if (selectedValue is QssColorPalette || selectedValue is QssColor) {
+        if (selectedNodes.size == 1 && selectedValue is QssColor) {
+            menu.add(JMenuItem("Edit Color").apply {
+                addActionListener {
+                    val palette = selectedNodes.single().parentPalette() ?: return@addActionListener
+                    showColorChooser(palette, selectedValue)
+                }
+            })
+        }
+
+        if (selectedNodes.size == 1 && (selectedValue is QssColorPalette || selectedValue is QssColor)) {
             menu.addSeparator()
             menu.add(JMenuItem("Rename").apply {
                 addActionListener {
@@ -332,24 +371,35 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
                     removeSelectedNode()
                 }
             })
+        } else if (selectedNodes.isNotEmpty() && getSelectedPalettes().isEmpty() && getSelectedColorSelections().isNotEmpty()) {
+            menu.add(JMenuItem("Delete Selected Colors").apply {
+                addActionListener {
+                    removeSelectedNode()
+                }
+            })
         }
 
         if (selectedValue is QssColor) {
             menu.addSeparator()
-            addCopyItem(menu, "Copy Hex Value") { selectedValue.toHex() }
-            addCopyItem(menu, "Copy QSS Value (Auto)") { selectedValue.toQssFormat() }
-            addCopyItem(menu, "Copy RGB Value") { selectedValue.toRgb() }
-            addCopyItem(menu, "Copy RGBA Value") { selectedValue.toRgba() }
-            addCopyItem(menu, "Copy as QSS Color Property") { "color: ${selectedValue.toQssFormat()};" }
-            addCopyItem(menu, "Copy as QSS Background Property") {
-                "background-color: ${selectedValue.toQssFormat()};"
+            addCopyItem(menu, "Copy Value") { selectedValue.toQssFormat() }
+
+            val formatMenu = JMenu("Copy Format")
+            for (format in copyFormatsFor(selectedValue)) {
+                addCopyItem(formatMenu, "Copy ${format.label}") {
+                    QssColorFormats.format(selectedValue.value, format)
+                }
             }
+            menu.add(formatMenu)
         }
 
         return menu
     }
 
-    private fun addCopyItem(menu: JPopupMenu, label: String, valueProvider: () -> String) {
+    private fun copyFormatsFor(color: QssColor): List<QssColorFormat> {
+        return QssColorFormats.explicitFormatsFor(color.value)
+    }
+
+    private fun addCopyItem(menu: JComponent, label: String, valueProvider: () -> String) {
         menu.add(JMenuItem(label).apply {
             addActionListener {
                 copyToClipboard(valueProvider())
@@ -358,42 +408,96 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
     }
 
     private fun startRenamingSelectedNode() {
-        tree.selectionPath?.let { path ->
+        tree.selectionPaths?.singleOrNull()?.let { path ->
             tree.startEditingAtPath(path)
         }
     }
 
     private fun removeSelectedNode() {
-        val selectedNode = getSelectedNode() ?: return
+        val selectedNodes = getSelectedNodes()
+        if (selectedNodes.isEmpty()) return
 
-        when (val selectedValue = selectedNode.userObject) {
-            is QssColorPalette -> {
-                paletteManager.removePalette(selectedValue)
-                refreshTree()
+        val selectedPalettes = getSelectedPalettes()
+        val selectedColors = getSelectedColorSelections()
+
+        if (selectedPalettes.size == 1 && selectedColors.isEmpty()) {
+            if (!confirmRemoval("Delete folder '${selectedPalettes.single().name}' and all colors in it?")) {
+                return
             }
 
-            is QssColor -> {
-                val palette = selectedNode.parentPalette() ?: return
-                paletteManager.removeColor(palette, selectedValue)
-                refreshTree(palette)
+            paletteManager.removePalette(selectedPalettes.single())
+            refreshTree()
+            return
+        }
+
+        if (selectedPalettes.isEmpty() && selectedColors.isNotEmpty()) {
+            if (selectedColors.size > 1 && !confirmRemoval("Delete ${selectedColors.size} selected colors?")) {
+                return
             }
+
+            val fallbackSelection = selectedColors.firstOrNull()?.palette
+            paletteManager.removeColors(selectedColors)
+            refreshTree(fallbackSelection)
         }
     }
 
-    private fun getSelectedNode(): DefaultMutableTreeNode? {
-        return tree.selectionPath?.lastPathComponent as? DefaultMutableTreeNode
+    private fun getSelectedNodes(): List<DefaultMutableTreeNode> {
+        return tree.selectionPaths
+            ?.mapNotNull { it.lastPathComponent as? DefaultMutableTreeNode }
+            ?: emptyList()
+    }
+
+    private fun getSelectionAnchorItem(): Any? {
+        return getSelectedNodes().firstOrNull()?.userObject
+    }
+
+    private fun getSelectedPalettes(): List<QssColorPalette> {
+        return getSelectedNodes().mapNotNull { it.userObject as? QssColorPalette }
+    }
+
+    private fun getSelectedColorSelections(): List<QssColorPaletteManager.ColorSelection> {
+        return getSelectedNodes().mapNotNull { node ->
+            val color = node.userObject as? QssColor ?: return@mapNotNull null
+            val palette = node.parentPalette() ?: return@mapNotNull null
+            QssColorPaletteManager.ColorSelection(palette, color)
+        }
+    }
+
+    private fun getSingleSelectedColor(): QssColor? {
+        return getSelectedNodes().singleOrNull()?.userObject as? QssColor
     }
 
     private fun getSelectedPalette(): QssColorPalette? {
-        val selectedNode = getSelectedNode() ?: return null
-        return when (val selectedValue = selectedNode.userObject) {
-            is QssColorPalette -> selectedValue
-            is QssColor -> selectedNode.parentPalette()
-            else -> null
-        }
+        val selectedNodes = getSelectedNodes()
+        if (selectedNodes.isEmpty()) return null
+
+        val selectedPalette = selectedNodes.singleOrNull()?.userObject as? QssColorPalette
+        if (selectedPalette != null) return selectedPalette
+
+        val selectedColorParents = selectedNodes
+            .filter { it.userObject is QssColor }
+            .mapNotNull { it.parentPalette() }
+            .distinctBy { System.identityHashCode(it) }
+
+        return selectedColorParents.singleOrNull()
+    }
+
+    private fun canRemoveSelection(): Boolean {
+        val selectedPalettes = getSelectedPalettes()
+        val selectedColors = getSelectedColorSelections()
+        return (selectedPalettes.size == 1 && selectedColors.isEmpty()) ||
+            (selectedPalettes.isEmpty() && selectedColors.isNotEmpty())
+    }
+
+    private fun confirmRemoval(message: String): Boolean {
+        return Messages.showYesNoDialog(project, message, "Delete Colors", null) == Messages.YES
     }
 
     fun getContent(): JComponent = panel
+
+    override fun dispose() {
+        paletteChangeSubscription.close()
+    }
 
     private fun copyToClipboard(text: String) {
         val selection = StringSelection(text)
@@ -425,8 +529,6 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
     }
 
     private class PaletteTreeCellRenderer : DefaultTreeCellRenderer() {
-        private val folderIcon = IconLoader.getIcon("/icons/qssColorFolder.svg", QssColorPaletteToolWindowContent::class.java)
-
         init {
             backgroundSelectionColor = null
             backgroundNonSelectionColor = null
@@ -460,31 +562,18 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
             when (val item = node?.userObject) {
                 is QssColorPalette -> {
                     text = item.name
-                    icon = folderIcon
+                    icon = QssIcons.FOLDER
                     toolTipText = "Double-click to rename"
                 }
 
                 is QssColor -> {
-                    text = "${item.name} (${item.toHex()})"
-                    icon = ColorSwatchIcon(item.value)
-                    toolTipText = "Double-click to copy ${item.toQssFormat()}"
+                    text = item.name
+                    icon = QssColorSwatchIcon(item.value)
+                    toolTipText = "Click swatch to edit; double-click name to copy ${item.toQssFormat()}"
                 }
             }
 
             return component
-        }
-    }
-
-    private class ColorSwatchIcon(private val color: Color) : Icon {
-        override fun getIconWidth(): Int = SWATCH_SIZE
-
-        override fun getIconHeight(): Int = SWATCH_SIZE
-
-        override fun paintIcon(component: Component?, graphics: Graphics, x: Int, y: Int) {
-            graphics.color = color
-            graphics.fillRect(x, y, SWATCH_SIZE, SWATCH_SIZE)
-            graphics.color = Color.BLACK
-            graphics.drawRect(x, y, SWATCH_SIZE - 1, SWATCH_SIZE - 1)
         }
     }
 
@@ -498,13 +587,28 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
 
         override fun createTransferable(component: JComponent): Transferable? {
             val tree = component as? JTree ?: return null
-            val node = tree.selectionPath?.lastPathComponent as? DefaultMutableTreeNode ?: return null
+            val selectedNodes = tree.selectionPaths
+                ?.mapNotNull { it.lastPathComponent as? DefaultMutableTreeNode }
+                ?: return null
+            val node = selectedNodes.singleOrNull() ?: selectedNodes.firstOrNull() ?: return null
 
             val draggedItem = when (val item = node.userObject) {
-                is QssColorPalette -> DraggedItem.Palette(item)
+                is QssColorPalette -> {
+                    if (selectedNodes.size != 1) return null
+                    DraggedItem.Palette(item)
+                }
                 is QssColor -> {
-                    val palette = node.parentPalette() ?: return null
-                    DraggedItem.Color(palette, item)
+                    val colorSelections = selectedNodes.mapNotNull { selectedNode ->
+                        val color = selectedNode.userObject as? QssColor ?: return@mapNotNull null
+                        val palette = selectedNode.parentPalette() ?: return@mapNotNull null
+                        QssColorPaletteManager.ColorSelection(palette, color)
+                    }
+                    if (colorSelections.size != selectedNodes.size) return null
+
+                    val sourcePalette = colorSelections.firstOrNull()?.palette ?: return null
+                    if (colorSelections.any { it.palette !== sourcePalette }) return null
+
+                    DraggedItem.Colors(sourcePalette, colorSelections.map { it.color })
                 }
                 else -> return null
             }
@@ -531,10 +635,10 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
                 draggedItem is DraggedItem.Palette && target is DropTarget.PaletteIndex ->
                     paletteManager.movePalette(draggedItem.palette, target.index)
 
-                draggedItem is DraggedItem.Color && target is DropTarget.ColorIndex ->
-                    paletteManager.moveColor(
+                draggedItem is DraggedItem.Colors && target is DropTarget.ColorIndex ->
+                    paletteManager.moveColors(
                         sourcePalette = draggedItem.sourcePalette,
-                        color = draggedItem.color,
+                        colors = draggedItem.colors,
                         targetPalette = target.palette,
                         targetIndex = target.index
                     )
@@ -546,7 +650,7 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
                 onMoved(
                     when (draggedItem) {
                         is DraggedItem.Palette -> draggedItem.palette
-                        is DraggedItem.Color -> draggedItem.color
+                        is DraggedItem.Colors -> draggedItem.colors.firstOrNull()
                     }
                 )
             }
@@ -564,7 +668,7 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
 
             return when (draggedItem) {
                 is DraggedItem.Palette -> findPaletteDropTarget(node, childIndex)
-                is DraggedItem.Color -> findColorDropTarget(node, childIndex)
+                is DraggedItem.Colors -> findColorDropTarget(node, childIndex)
             }
         }
 
@@ -625,7 +729,7 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
 
     private sealed class DraggedItem {
         data class Palette(val palette: QssColorPalette) : DraggedItem()
-        data class Color(val sourcePalette: QssColorPalette, val color: QssColor) : DraggedItem()
+        data class Colors(val sourcePalette: QssColorPalette, val colors: List<QssColor>) : DraggedItem()
     }
 
     private sealed class DropTarget {
@@ -637,7 +741,7 @@ class QssColorPaletteToolWindowContent(private val project: Project) {
         private const val ROOT_LABEL = "Folders"
         private const val LAST_PANEL_KEY = "qss.color.picker.last.panel"
         private const val COPY_SELECTED_COLOR_ACTION = "copySelectedQssColor"
-        private const val SWATCH_SIZE = 14
+        private const val COLOR_SWATCH_HIT_WIDTH = 22
     }
 }
 

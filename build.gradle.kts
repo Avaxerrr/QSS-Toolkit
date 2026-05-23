@@ -42,12 +42,12 @@ intellijPlatform {
     changeNotes = """
             <h3>Upcoming - Version TBD</h3>
             <ul>
-                <li><b>IDE Compatibility:</b> Updated the declared support range to IDE builds <code>242</code> through <code>262.*</code>. Build <code>242</code> (2024.2) is the minimum because the plugin is compiled for Java 21.</li>
-                <li><b>QSS Syntax:</b> Added missing Qt stylesheet entries used by completion and validation, including <code>-qt-background-role</code>, <code>-qt-style-features</code>, <code>widget-animation-duration</code>, <code>lineedit-password-mask-delay</code>, Qt standard <code>*-icon</code> properties, <code>:exclusive</code>, <code>:non-exclusive</code>, and <code>::tearoff</code>.</li>
-                <li><b>Validation:</b> Fixed false errors for leading-hyphen Qt properties and dynamic <code>qproperty-*</code> declarations such as <code>qproperty-wordWrap</code>.</li>
-                <li><b>Bug Fix:</b> Fixed a false weak warning on complete border declarations that use Qt color functions, such as <code>border: 1px solid palette(WindowText);</code>.</li>
-                <li><b>Color Folders:</b> Redesigned the color palette tool window as a folder-style tree with automatic folder/color names, inline rename, context menu rename, drag/drop reordering, moving colors between folders, non-modal copy feedback, and additional RGB/RGBA copy formats.</li>
-                <li><b>Packaging:</b> Removed unused bundled coroutine libraries; the plugin now relies on the IntelliJ Platform-provided runtime.</li>
+                <li><b>IDE Compatibility:</b> Added support for 2026 JetBrains IDE builds.</li>
+                <li><b>QSS Syntax:</b> Added more Qt stylesheet properties, pseudo-states, sub-controls, and icon properties for completion and validation.</li>
+                <li><b>Validation:</b> Fixed false warnings and errors for Qt-specific properties, <code>qproperty-*</code> declarations, and border values that use Qt color functions.</li>
+                <li><b>QSS Colors Panel:</b> Revamped the color side panel with folders, quick rename, drag/drop organization, multi-select actions, live updates, and editable opacity-aware swatches.</li>
+                <li><b>Editor Context Menu:</b> Added <code>Insert Color</code> and <code>Save Color</code> actions for working with saved colors directly from the editor.</li>
+                <li><b>Color Tools:</b> Added support for HSL and HSV color values in validation, highlighting, copy, and insert actions.</li>
             </ul>
 
             <h3>Version 2.0.1 - February 2026</h3>

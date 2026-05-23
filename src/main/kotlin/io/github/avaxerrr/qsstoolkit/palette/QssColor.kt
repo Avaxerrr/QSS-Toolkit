@@ -2,11 +2,10 @@ package io.github.avaxerrr.qsstoolkit.palette
 
 import java.awt.Color
 import java.io.Serializable
-import java.util.Locale
 
 data class QssColor(
     var name: String,
-    val value: Color
+    var value: Color
 ) : Serializable {
 
     /**
@@ -14,13 +13,7 @@ data class QssColor(
      * Uses rgba() if color has transparency, otherwise hex.
      */
     fun toQssFormat(): String {
-        return if (value.alpha < 255) {
-            // Use rgba() for transparent colors (Qt compatible)
-            toRgba()
-        } else {
-            // Use hex for opaque colors
-            toHex()
-        }
+        return QssColorFormats.format(value, QssColorFormat.AUTO)
     }
 
     /**
@@ -28,28 +21,43 @@ data class QssColor(
      * Kept for backwards compatibility.
      */
     fun toHex(): String {
-        return String.format("#%02X%02X%02X", value.red, value.green, value.blue)
+        return QssColorFormats.toHex(value)
+    }
+
+    fun toStorageHex(): String {
+        return QssColorFormats.toStorageHex(value)
     }
 
     fun toRgb(): String {
-        return "rgb(${value.red}, ${value.green}, ${value.blue})"
+        return QssColorFormats.toRgb(value)
     }
 
     fun toRgba(): String {
-        val alpha = value.alpha / 255.0f
-        return String.format(Locale.US, "rgba(%d, %d, %d, %.2f)", value.red, value.green, value.blue, alpha)
+        return QssColorFormats.toRgba(value)
+    }
+
+    fun toHsl(): String {
+        return QssColorFormats.toHsl(value)
+    }
+
+    fun toHsla(): String {
+        return QssColorFormats.toHsla(value)
+    }
+
+    fun toHsv(): String {
+        return QssColorFormats.toHsv(value)
+    }
+
+    fun toHsva(): String {
+        return QssColorFormats.toHsva(value)
     }
 
     override fun toString(): String = name
 
     companion object {
         fun fromHex(name: String, hex: String): QssColor? {
-            return try {
-                val color = Color.decode(hex)
-                QssColor(name, color)
-            } catch (e: Exception) {
-                null
-            }
+            val color = QssColorFormats.parseConcreteColor(hex) ?: return null
+            return QssColor(name, color)
         }
     }
 }

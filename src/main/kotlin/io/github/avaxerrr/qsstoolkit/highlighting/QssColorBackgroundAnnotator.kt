@@ -3,10 +3,10 @@ package io.github.avaxerrr.qsstoolkit.highlighting
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
-import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.psi.PsiElement
 import io.github.avaxerrr.qsstoolkit.lexer.QssTokenTypes
+import io.github.avaxerrr.qsstoolkit.palette.QssColorFormats
 import java.awt.Color
 
 /**
@@ -30,7 +30,7 @@ class QssColorBackgroundAnnotator : Annotator {
             QssTokenTypes.HEX_COLOR -> {
                 // Handle hex colors: #FF0000, #0e639c, etc.
                 val colorText = element.text
-                val color = parseHexColor(colorText)
+                val color = QssColorFormats.parseConcreteColor(colorText)
                 if (color != null) {
                     applyBackgroundColor(element, holder, color)
                 }
@@ -39,7 +39,7 @@ class QssColorBackgroundAnnotator : Annotator {
             QssTokenTypes.RGB_FUNCTION -> {
                 // Handle rgb(255, 0, 0)
                 val colorText = element.text
-                val color = parseRgbFunction(colorText)
+                val color = QssColorFormats.parseConcreteColor(colorText)
                 if (color != null) {
                     applyBackgroundColor(element, holder, color)
                 }
@@ -48,7 +48,15 @@ class QssColorBackgroundAnnotator : Annotator {
             QssTokenTypes.RGBA_FUNCTION -> {
                 // Handle rgba(0, 0, 255, 0.5) - preserves alpha!
                 val colorText = element.text
-                val color = parseRgbaFunction(colorText)
+                val color = QssColorFormats.parseConcreteColor(colorText)
+                if (color != null) {
+                    applyBackgroundColor(element, holder, color)
+                }
+            }
+
+            QssTokenTypes.COLOR_FUNCTION -> {
+                val colorText = element.text
+                val color = QssColorFormats.parseConcreteColor(colorText)
                 if (color != null) {
                     applyBackgroundColor(element, holder, color)
                 }
@@ -109,81 +117,5 @@ class QssColorBackgroundAnnotator : Annotator {
 
         // Return soft white text for dark backgrounds, black text for bright backgrounds
         return if (luminance > 0.5) Color.BLACK else SOFT_WHITE
-    }
-
-    /**
-     * Parses hex color strings: #RGB, #RRGGBB, #RRGGBBAA
-     */
-    private fun parseHexColor(text: String): Color? {
-        val hex = text.removePrefix("#")
-
-        return try {
-            when (hex.length) {
-                3 -> {
-                    // #RGB -> #RRGGBB
-                    val r = hex.substring(0, 1).repeat(2).toInt(16)
-                    val g = hex.substring(1, 2).repeat(2).toInt(16)
-                    val b = hex.substring(2, 3).repeat(2).toInt(16)
-                    Color(r, g, b)
-                }
-                6 -> {
-                    // #RRGGBB
-                    val r = hex.substring(0, 2).toInt(16)
-                    val g = hex.substring(2, 4).toInt(16)
-                    val b = hex.substring(4, 6).toInt(16)
-                    Color(r, g, b)
-                }
-                8 -> {
-                    // #RRGGBBAA - preserves alpha!
-                    val r = hex.substring(0, 2).toInt(16)
-                    val g = hex.substring(2, 4).toInt(16)
-                    val b = hex.substring(4, 6).toInt(16)
-                    val a = hex.substring(6, 8).toInt(16)
-                    Color(r, g, b, a)
-                }
-                else -> null
-            }
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    /**
-     * Parses rgb(r, g, b) format - returns OPAQUE color
-     */
-    private fun parseRgbFunction(text: String): Color? {
-        return try {
-            val regex = Regex("rgb\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)")
-            val match = regex.find(text) ?: return null
-
-            val (r, g, b) = match.destructured
-            val red = r.toInt().coerceIn(0, 255)
-            val green = g.toInt().coerceIn(0, 255)
-            val blue = b.toInt().coerceIn(0, 255)
-
-            Color(red, green, blue)
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    /**
-     * Parses rgba(r, g, b, a) format - PRESERVES original alpha!
-     */
-    private fun parseRgbaFunction(text: String): Color? {
-        return try {
-            val regex = Regex("rgba\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*([0-9.]+)\\s*\\)")
-            val match = regex.find(text) ?: return null
-
-            val (r, g, b, a) = match.destructured
-            val red = r.toInt().coerceIn(0, 255)
-            val green = g.toInt().coerceIn(0, 255)
-            val blue = b.toInt().coerceIn(0, 255)
-            val alpha = (a.toFloat() * 255).toInt().coerceIn(0, 255)
-
-            Color(red, green, blue, alpha)
-        } catch (e: Exception) {
-            null
-        }
     }
 }

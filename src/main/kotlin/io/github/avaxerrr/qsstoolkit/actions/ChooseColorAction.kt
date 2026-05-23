@@ -18,6 +18,8 @@ import javax.swing.JTabbedPane
 import javax.swing.SwingUtilities
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
+import io.github.avaxerrr.qsstoolkit.palette.QssColorFormat
+import io.github.avaxerrr.qsstoolkit.palette.QssColorFormats
 
 class ChooseColorAction(
     private val initialColor: Color,
@@ -152,27 +154,24 @@ class ChooseColorAction(
         val newColorText = when {
             // RGBA format: rgba(r, g, b, a) - preserve it
             originalText.startsWith("rgba", ignoreCase = true) -> {
-                val alpha = color.alpha / 255.0f
-                String.format("rgba(%d, %d, %d, %.2f)", color.red, color.green, color.blue, alpha)
+                QssColorFormats.format(color, QssColorFormat.RGBA)
             }
             // RGB format: rgb(r, g, b) - if user added transparency, convert to rgba
             originalText.startsWith("rgb", ignoreCase = true) -> {
                 if (color.alpha < 255) {
-                    val alpha = color.alpha / 255.0f
-                    String.format("rgba(%d, %d, %d, %.2f)", color.red, color.green, color.blue, alpha)
+                    QssColorFormats.format(color, QssColorFormat.RGBA)
                 } else {
-                    String.format("rgb(%d, %d, %d)", color.red, color.green, color.blue)
+                    QssColorFormats.format(color, QssColorFormat.RGB)
                 }
             }
             // Hex format: #RRGGBB - if user added transparency, convert to rgba
             else -> {
                 if (color.alpha < 255) {
                     // Convert to rgba() instead of 8-digit hex for Qt compatibility
-                    val alpha = color.alpha / 255.0f
-                    String.format("rgba(%d, %d, %d, %.2f)", color.red, color.green, color.blue, alpha)
+                    QssColorFormats.format(color, QssColorFormat.RGBA)
                 } else {
                     // Standard 6-digit hex
-                    String.format("#%02X%02X%02X", color.red, color.green, color.blue)
+                    QssColorFormats.format(color, QssColorFormat.HEX)
                 }
             }
         }

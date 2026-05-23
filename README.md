@@ -22,6 +22,16 @@ Stop switching between your IDE and external editors when styling Qt application
 
 ---
 
+## What's New in Upcoming Version
+
+- **2026 IDE support** - Added compatibility for newer JetBrains IDE builds
+- **Revamped QSS Colors panel** - Organize colors with folders, drag/drop, multi-select actions, live updates, and editable opacity-aware swatches
+- **Editor context menu** - Use `Insert Color` and `Save Color` directly from the editor
+- **More color formats** - Added HSL/HSLA and HSV/HSVA support alongside hex, RGB, and RGBA
+- **Validation fixes** - Improved handling for Qt-specific properties, `qproperty-*` declarations, and Qt color functions
+
+---
+
 ## What's New in Version 2.0
 
 ### Robust Error Detection
@@ -67,9 +77,9 @@ Stop switching between your IDE and external editors when styling Qt application
 ### Advanced Color Tools
 - **Visual color picker** - Click gutter icons to edit colors with HSV/HSL/RGB panels
 - **Gutter previews** - Color swatches with borders for transparent colors
-- **Format preservation** - Maintains your chosen format (hex/RGB/RGBA) when editing
+- **Format support** - Works with hex, RGB/RGBA, HSL/HSLA, and HSV/HSVA colors
 - **Gradient recognition** - Support for `qlineargradient()`, `qradialgradient()`, `qconicalgradient()`
-- **Color palette manager** - Create reusable color schemes in dedicated tool window
+- **QSS Colors panel** - Save, edit, organize, and insert reusable colors from the side panel or editor context menu
 
 ### Smart Editing Features
 - **Auto-close brackets & quotes** - Automatic insertion of closing characters

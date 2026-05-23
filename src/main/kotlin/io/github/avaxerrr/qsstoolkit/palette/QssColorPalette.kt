@@ -31,5 +31,10 @@ class QssColorPalette(var name: String) : Serializable {
 
     fun getAllColors(): List<QssColor> = colors.toList()
 
+    fun replaceColors(newColors: List<QssColor>) {
+        colors.clear()
+        colors.addAll(newColors)
+    }
+
     override fun toString(): String = name
 }

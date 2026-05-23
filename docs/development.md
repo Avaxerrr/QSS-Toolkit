@@ -31,6 +31,9 @@ This document covers project-facing development practices for QSS Toolkit.
 - Creation flows should avoid required naming popups. Generate sensible default names and allow rename later.
 - Drag/drop behavior should update the model first, then refresh the UI.
 - Keep frequent actions such as copy and add non-modal.
+- Keep editor context-menu color insertion backed by the same format/parser logic as the color folder tool window.
+- Reuse shared presentation helpers, such as color swatch icons, when the same visual appears in multiple UI surfaces.
+- Palette manager mutations from actions outside the tool window must notify open UI views through the manager listener API.
 
 ## Testing
 
