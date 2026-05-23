@@ -62,7 +62,7 @@ class QssColorPaletteToolWindowFactory : ToolWindowFactory {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val toolWindowContent = QssColorPaletteToolWindowContent(project)
         val content = ContentFactory.getInstance().createContent(
-            toolWindowContent.getContent(), "Color Folders", false
+            toolWindowContent.getContent(), "", false
         )
         content.setDisposer(toolWindowContent)
         toolWindow.contentManager.addContent(content)
