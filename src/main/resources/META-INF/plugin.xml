@@ -11,10 +11,9 @@
 
         <h3>Upcoming - Version TBD</h3>
         <ul>
-            <li><b>Compatibility:</b> Minimum supported IDE build will be 242 (2024.2), matching the Java 21 runtime used by current IntelliJ Platform builds.</li>
-            <li><b>Qt Stylesheet Coverage:</b> Added current Qt stylesheet properties, icon properties, pseudo-states, and sub-controls, including <code>-qt-background-role</code>, <code>-qt-style-features</code>, <code>widget-animation-duration</code>, <code>lineedit-password-mask-delay</code>, <code>:exclusive</code>, <code>:non-exclusive</code>, and <code>::tearoff</code>.</li>
-            <li><b>Validation:</b> Dynamic <code>qproperty-*</code> declarations are supported so custom QObject properties and camelCase Qt property names are not incorrectly reported as unknown properties.</li>
-            <li><b>Stability:</b> Removed unused bundled coroutine dependencies and added regression tests that load real <code>.qss</code> files through the IntelliJ test fixture.</li>
+            <li><b>IDE Compatibility:</b> Updated the declared support range to IDE builds 242 through 262.*. Build 242 (2024.2) is the minimum because the plugin is compiled for Java 21.</li>
+            <li><b>QSS Syntax:</b> Added missing Qt stylesheet entries used by completion and validation, including <code>-qt-background-role</code>, <code>-qt-style-features</code>, <code>widget-animation-duration</code>, <code>lineedit-password-mask-delay</code>, Qt standard <code>*-icon</code> properties, <code>:exclusive</code>, <code>:non-exclusive</code>, and <code>::tearoff</code>.</li>
+            <li><b>Validation:</b> Fixed false errors for leading-hyphen Qt properties and dynamic <code>qproperty-*</code> declarations such as <code>qproperty-wordWrap</code>.</li>
         </ul>
 
         <h3>New in Version 2.0.1</h3>

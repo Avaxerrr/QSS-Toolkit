@@ -42,10 +42,10 @@ intellijPlatform {
     changeNotes = """
             <h3>Upcoming - Version TBD</h3>
             <ul>
-                <li><b>Compatibility:</b> Raised the minimum supported IDE build to <code>242</code> (2024.2) to match the Java 21 runtime required by current IntelliJ Platform builds.</li>
-                <li><b>Qt Stylesheet Coverage:</b> Added current Qt stylesheet properties, icon properties, pseudo-states, and sub-controls, including <code>-qt-background-role</code>, <code>-qt-style-features</code>, <code>widget-animation-duration</code>, <code>lineedit-password-mask-delay</code>, <code>:exclusive</code>, <code>:non-exclusive</code>, and <code>::tearoff</code>.</li>
-                <li><b>Validation:</b> Added support for dynamic <code>qproperty-*</code> declarations so custom QObject properties and camelCase Qt property names are not incorrectly reported as unknown properties.</li>
-                <li><b>Stability:</b> Removed unused bundled coroutine dependencies and added regression tests that load real <code>.qss</code> files through the IntelliJ test fixture.</li>
+                <li><b>IDE Compatibility:</b> Updated the declared support range to IDE builds <code>242</code> through <code>262.*</code>. Build <code>242</code> (2024.2) is the minimum because the plugin is compiled for Java 21.</li>
+                <li><b>QSS Syntax:</b> Added missing Qt stylesheet entries used by completion and validation, including <code>-qt-background-role</code>, <code>-qt-style-features</code>, <code>widget-animation-duration</code>, <code>lineedit-password-mask-delay</code>, Qt standard <code>*-icon</code> properties, <code>:exclusive</code>, <code>:non-exclusive</code>, and <code>::tearoff</code>.</li>
+                <li><b>Validation:</b> Fixed false errors for leading-hyphen Qt properties and dynamic <code>qproperty-*</code> declarations such as <code>qproperty-wordWrap</code>.</li>
+                <li><b>Packaging:</b> Removed unused bundled coroutine libraries; the plugin now relies on the IntelliJ Platform-provided runtime.</li>
             </ul>
 
             <h3>Version 2.0.1 - February 2026</h3>
