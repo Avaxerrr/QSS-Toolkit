@@ -9,6 +9,14 @@
 
         <p>Professional Qt Style Sheet (QSS) editing support for all IntelliJ Platform-based IDEs. Perfect for Qt developers working in C++, Python, or any other Qt-supported language.</p>
 
+        <h3>Upcoming - Version TBD</h3>
+        <ul>
+            <li><b>Compatibility:</b> Minimum supported IDE build will be 242 (2024.2), matching the Java 21 runtime used by current IntelliJ Platform builds.</li>
+            <li><b>Qt Stylesheet Coverage:</b> Added current Qt stylesheet properties, icon properties, pseudo-states, and sub-controls, including <code>-qt-background-role</code>, <code>-qt-style-features</code>, <code>widget-animation-duration</code>, <code>lineedit-password-mask-delay</code>, <code>:exclusive</code>, <code>:non-exclusive</code>, and <code>::tearoff</code>.</li>
+            <li><b>Validation:</b> Dynamic <code>qproperty-*</code> declarations are supported so custom QObject properties and camelCase Qt property names are not incorrectly reported as unknown properties.</li>
+            <li><b>Stability:</b> Removed unused bundled coroutine dependencies and added regression tests that load real <code>.qss</code> files through the IntelliJ test fixture.</li>
+        </ul>
+
         <h3>New in Version 2.0.1</h3>
         <ul>
             <li><b>Bug Fix:</b> Fixed <code>palette()</code>, <code>hsv()</code>, <code>hsva()</code>, <code>hsl()</code>, and <code>hsla()</code> color functions being incorrectly flagged as invalid by the validator.</li>

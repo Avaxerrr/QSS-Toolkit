@@ -182,20 +182,21 @@ class QssValidationAnnotator : Annotator {
 
                     if (propertyName.isNotEmpty() && propertyNameStartElement != null && propertyNameEndElement != null) {
                         val normalizedProperty = propertyName.lowercase(Locale.getDefault())
+                        val isDynamicQtProperty = propertyName.startsWith("qproperty-", ignoreCase = true)
 
                         val fullRange = TextRange(
                             propertyNameStartElement.textRange.startOffset,
                             propertyNameEndElement.textRange.endOffset
                         )
 
-                        if (!QssData.PROPERTY_TYPES.containsKey(normalizedProperty)) {
+                        if (!isDynamicQtProperty && !QssData.PROPERTY_TYPES.containsKey(normalizedProperty)) {
                             holder.newAnnotation(
                                 HighlightSeverity.ERROR,
                                 "Unknown property '$propertyName'. Check spelling or refer to Qt documentation."
                             )
                                 .range(fullRange)
                                 .create()
-                        } else {
+                        } else if (!isDynamicQtProperty) {
                             val document = propertyNameStartElement.containingFile.viewProvider.document
                             if (document != null) {
                                 val originalText = document.getText(fullRange)

@@ -149,6 +149,11 @@ class QssLexer : LexerBase() {
                 scanString()
                 currentToken = QssTokenTypes.STRING
             }
+            buffer[currentPosition] == '-' && currentPosition + 1 < bufferEnd &&
+                    isIdentifierStart(buffer[currentPosition + 1]) -> {
+                scanIdentifier()
+                currentToken = QssTokenTypes.IDENTIFIER
+            }
             isDigit(buffer[currentPosition]) ||
                     (buffer[currentPosition] == '-' && currentPosition + 1 < bufferEnd &&
                             isDigit(buffer[currentPosition + 1])) -> {

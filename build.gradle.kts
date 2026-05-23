@@ -18,12 +18,12 @@ repositories {
 }
 
 dependencies {
-  // Coroutines support
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.10.2")
+  testImplementation(kotlin("test"))
+  testImplementation("junit:junit:4.13.2")
+  testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.10.1")
 
   intellijPlatform {
-    intellijIdeaCommunity("2025.1")  // Keep only this one
+    intellijIdeaCommunity("2024.2")
     testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
   }
 }
@@ -35,11 +35,19 @@ intellijPlatform {
 
   pluginConfiguration {
     ideaVersion {
-      sinceBuild = "241"
-      untilBuild = "253.*"
+      sinceBuild = "242"
+      untilBuild = "262.*"
     }
 
     changeNotes = """
+            <h3>Upcoming - Version TBD</h3>
+            <ul>
+                <li><b>Compatibility:</b> Raised the minimum supported IDE build to <code>242</code> (2024.2) to match the Java 21 runtime required by current IntelliJ Platform builds.</li>
+                <li><b>Qt Stylesheet Coverage:</b> Added current Qt stylesheet properties, icon properties, pseudo-states, and sub-controls, including <code>-qt-background-role</code>, <code>-qt-style-features</code>, <code>widget-animation-duration</code>, <code>lineedit-password-mask-delay</code>, <code>:exclusive</code>, <code>:non-exclusive</code>, and <code>::tearoff</code>.</li>
+                <li><b>Validation:</b> Added support for dynamic <code>qproperty-*</code> declarations so custom QObject properties and camelCase Qt property names are not incorrectly reported as unknown properties.</li>
+                <li><b>Stability:</b> Removed unused bundled coroutine dependencies and added regression tests that load real <code>.qss</code> files through the IntelliJ test fixture.</li>
+            </ul>
+
             <h3>Version 2.0.1 - February 2026</h3>
             <ul>
                 <li><b>Bug Fix:</b> Fixed <code>palette()</code>, <code>hsv()</code>, <code>hsva()</code>, <code>hsl()</code>, and <code>hsla()</code> color functions being incorrectly flagged as invalid color values by the validator. These are fully valid Qt QSS color functions and should produce no errors. Reported by @TheDogHusky.</li>
@@ -129,5 +137,9 @@ tasks {
 
   buildSearchableOptions {
     enabled = false
+  }
+
+  test {
+    useJUnitPlatform()
   }
 }
