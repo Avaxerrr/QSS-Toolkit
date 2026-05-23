@@ -12,6 +12,7 @@ import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.StatusBar
 import io.github.avaxerrr.qsstoolkit.QssIcons
+import io.github.avaxerrr.qsstoolkit.QssFileType
 import io.github.avaxerrr.qsstoolkit.palette.QssColor
 import io.github.avaxerrr.qsstoolkit.palette.QssColorFormat
 import io.github.avaxerrr.qsstoolkit.palette.QssColorFormats
@@ -35,6 +36,7 @@ class QssEditorColorsActionGroup : ActionGroup("QSS Toolkit", true), DumbAware {
     override fun getChildren(e: AnActionEvent?): Array<AnAction> {
         val project = e?.project ?: return emptyArray()
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return emptyArray()
+        val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE)
         val paletteManager = QssColorPaletteManager.getInstance(project)
         val palettes = paletteManager.getAllPalettes()
 
@@ -45,6 +47,11 @@ class QssEditorColorsActionGroup : ActionGroup("QSS Toolkit", true), DumbAware {
             if (selectedColor != null) {
                 add(Separator.getInstance())
                 add(AddSelectedColorGroup(paletteManager, palettes, selectedColor))
+            }
+
+            if (virtualFile?.extension?.equals(QssFileType.DEFAULT_EXTENSION, ignoreCase = true) == true) {
+                add(Separator.getInstance())
+                add(QssLiveReloadSnippetActionGroup(virtualFile.path))
             }
         }.toTypedArray()
     }
