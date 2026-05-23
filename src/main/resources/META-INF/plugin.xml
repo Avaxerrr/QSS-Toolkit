@@ -14,6 +14,8 @@
             <li><b>IDE Compatibility:</b> Updated the declared support range to IDE builds 242 through 262.*. Build 242 (2024.2) is the minimum because the plugin is compiled for Java 21.</li>
             <li><b>QSS Syntax:</b> Added missing Qt stylesheet entries used by completion and validation, including <code>-qt-background-role</code>, <code>-qt-style-features</code>, <code>widget-animation-duration</code>, <code>lineedit-password-mask-delay</code>, Qt standard <code>*-icon</code> properties, <code>:exclusive</code>, <code>:non-exclusive</code>, and <code>::tearoff</code>.</li>
             <li><b>Validation:</b> Fixed false errors for leading-hyphen Qt properties and dynamic <code>qproperty-*</code> declarations such as <code>qproperty-wordWrap</code>.</li>
+            <li><b>Bug Fix:</b> Fixed a false weak warning on complete border declarations that use Qt color functions, such as <code>border: 1px solid palette(WindowText);</code>.</li>
+            <li><b>Color Folders:</b> Redesigned the color palette tool window as a folder-style tree with automatic folder/color names, inline rename, context menu rename, drag/drop reordering, moving colors between folders, non-modal copy feedback, and additional RGB/RGBA copy formats.</li>
         </ul>
 
         <h3>New in Version 2.0.1</h3>

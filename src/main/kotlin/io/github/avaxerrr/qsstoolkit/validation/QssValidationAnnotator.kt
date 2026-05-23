@@ -161,6 +161,7 @@ class QssValidationAnnotator : Annotator {
         var propertyNameStartElement: PsiElement? = null
         var propertyNameEndElement: PsiElement? = null
         var foundColon = false
+        val valueElements = mutableListOf<PsiElement>()
 
         var child = declaration.firstChild
         while (child != null) {
@@ -222,39 +223,66 @@ class QssValidationAnnotator : Annotator {
                     type != QssTokenTypes.COMMA) {
 
                     if (propertyName.isNotEmpty()) {
-                        validateValue(propertyName, child, holder)
+                        valueElements += child
                     }
                 }
             }
             child = child.nextSibling
         }
+
+        validateCollectedValues(propertyName, valueElements, holder)
+    }
+
+    private fun validateCollectedValues(propertyName: String, valueElements: List<PsiElement>, holder: AnnotationHolder) {
+        if (propertyName.isEmpty() || valueElements.isEmpty()) {
+            return
+        }
+
+        val expectedType = QssData.PROPERTY_TYPES[propertyName.lowercase(Locale.getDefault())] ?: return
+
+        if (expectedType == QssData.PropertyType.BORDER) {
+            val valueRange = TextRange(
+                valueElements.first().textRange.startOffset,
+                valueElements.last().textRange.endOffset
+            )
+            val document = valueElements.first().containingFile.viewProvider.document
+            val valueText = document?.getText(valueRange) ?: valueElements.joinToString(" ") { it.text }
+
+            validateValue(propertyName, valueText, valueRange, holder)
+        } else {
+            valueElements.forEach { validateValue(propertyName, it, holder) }
+        }
     }
 
     private fun validateValue(propertyName: String, valueElement: PsiElement, holder: AnnotationHolder) {
-        val expectedType = QssData.PROPERTY_TYPES[propertyName.lowercase(Locale.getDefault())] ?: return
-        val valueText = valueElement.text.trim()
+        validateValue(propertyName, valueElement.text, valueElement.textRange, holder)
+    }
 
-        if (isTemplateVariable(valueText)) {
+    private fun validateValue(propertyName: String, valueText: String, valueRange: TextRange, holder: AnnotationHolder) {
+        val expectedType = QssData.PROPERTY_TYPES[propertyName.lowercase(Locale.getDefault())] ?: return
+        val trimmedValueText = valueText.trim()
+
+        if (isTemplateVariable(trimmedValueText)) {
             return
         }
 
         val validationResult = when (expectedType) {
-            QssData.PropertyType.COLOR -> validateColor(valueText)
-            QssData.PropertyType.MEASUREMENT -> validateMeasurement(valueText)
-            QssData.PropertyType.NUMBER -> validateNumber(valueText, propertyName)
-            QssData.PropertyType.URL -> validateUrl(valueText)
+            QssData.PropertyType.COLOR -> validateColor(trimmedValueText)
+            QssData.PropertyType.MEASUREMENT -> validateMeasurement(trimmedValueText)
+            QssData.PropertyType.NUMBER -> validateNumber(trimmedValueText, propertyName)
+            QssData.PropertyType.URL -> validateUrl(trimmedValueText)
             QssData.PropertyType.STRING -> ValidationResult.Valid
-            QssData.PropertyType.BORDER -> validateBorder(valueText)
+            QssData.PropertyType.BORDER -> validateBorder(trimmedValueText)
             else -> ValidationResult.Valid
         }
 
         if (validationResult is ValidationResult.Invalid) {
             holder.newAnnotation(HighlightSeverity.ERROR, validationResult.message)
-                .range(valueElement)
+                .range(valueRange)
                 .create()
         } else if (validationResult is ValidationResult.Warning) {
             holder.newAnnotation(HighlightSeverity.WEAK_WARNING, validationResult.message)
-                .range(valueElement)
+                .range(valueRange)
                 .create()
         }
     }

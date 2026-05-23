@@ -2,9 +2,10 @@ package io.github.avaxerrr.qsstoolkit.palette
 
 import java.awt.Color
 import java.io.Serializable
+import java.util.Locale
 
 data class QssColor(
-    val name: String,
+    var name: String,
     val value: Color
 ) : Serializable {
 
@@ -15,11 +16,10 @@ data class QssColor(
     fun toQssFormat(): String {
         return if (value.alpha < 255) {
             // Use rgba() for transparent colors (Qt compatible)
-            val alpha = value.alpha / 255.0f
-            String.format("rgba(%d, %d, %d, %.2f)", value.red, value.green, value.blue, alpha)
+            toRgba()
         } else {
             // Use hex for opaque colors
-            String.format("#%02X%02X%02X", value.red, value.green, value.blue)
+            toHex()
         }
     }
 
@@ -30,6 +30,17 @@ data class QssColor(
     fun toHex(): String {
         return String.format("#%02X%02X%02X", value.red, value.green, value.blue)
     }
+
+    fun toRgb(): String {
+        return "rgb(${value.red}, ${value.green}, ${value.blue})"
+    }
+
+    fun toRgba(): String {
+        val alpha = value.alpha / 255.0f
+        return String.format(Locale.US, "rgba(%d, %d, %d, %.2f)", value.red, value.green, value.blue, alpha)
+    }
+
+    override fun toString(): String = name
 
     companion object {
         fun fromHex(name: String, hex: String): QssColor? {

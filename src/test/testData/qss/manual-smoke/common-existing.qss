@@ -1,0 +1,20 @@
+QPushButton:hover {
+    background-color: #336699;
+    border: 1px solid palette(WindowText);
+    border-radius: 4px;
+    color: rgba(255, 255, 255, 180);
+    padding: 6px 12px;
+}
+
+QScrollBar::handle:vertical {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #eeeeee, stop:1 #cccccc);
+    min-height: 20px;
+}
+
+QMenu::item:selected {
+    selection-background-color: hsv(210, 80, 190);
+}
+
+QCheckBox::indicator:checked {
+    image: url(:/icons/check.svg);
+}

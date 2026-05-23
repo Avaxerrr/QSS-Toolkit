@@ -1,0 +1,28 @@
+QWidget {
+    -qt-background-role: Window;
+    -qt-style-features: icon;
+    widget-animation-duration: 150;
+}
+
+QLineEdit {
+    lineedit-password-mask-delay: 500;
+    lineedit-clear-button-icon: url(:/icons/clear.svg);
+    qproperty-wordWrap: 1;
+    qproperty-titleColor: palette(WindowText);
+}
+
+QToolButton::up-arrow:exclusive {
+    image: url(:/icons/up.svg);
+}
+
+QMenu::tearoff {
+    image: url(:/icons/tearoff.svg);
+}
+
+QTabWidget::left-corner {
+    width: 12px;
+}
+
+QPushButton::menu-indicator {
+    image: url(:/icons/menu.svg);
+}
