@@ -1,0 +1,83 @@
+QWidget {
+    background-color: #20242A;
+    color: #E8EEF8;
+    font-size: 14px;
+}
+
+QLabel#Title {
+    color: #8BCF94;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+QLabel#Description {
+    color: #B7C2D0;
+    padding-bottom: 8px;
+}
+
+QLabel#ReloadStatus {
+    color: #93B7FF;
+    padding-top: 8px;
+}
+
+QPushButton {
+    border: 1px solid #4B5563;
+    border-radius: 6px;
+    padding: 8px 14px;
+    background-color: #2F3540;
+    color: #F4F7FB;
+}
+
+QPushButton:hover {
+    background-color: #3B4350;
+}
+
+QPushButton#PrimaryButton {
+    background-color: #1177BB;
+    border-color: #4EA4E8;
+}
+
+QPushButton#PrimaryButton:hover {
+    background-color: #1688D5;
+}
+
+QPushButton#SecondaryButton {
+    background-color: #2A8745;
+    border-color: #65BF79;
+}
+
+QFrame#DemoCard {
+    background-color: #292F38;
+    border: 1px solid #3C4654;
+    border-radius: 8px;
+    padding: 14px;
+}
+
+QLineEdit {
+    background-color: #181C22;
+    border: 1px solid #4B5563;
+    border-radius: 5px;
+    padding: 7px 9px;
+    selection-background-color: #1177BB;
+}
+
+QLineEdit:focus {
+    border-color: #FFC107;
+}
+
+QCheckBox {
+    spacing: 8px;
+}
+
+QSlider::groove:horizontal {
+    height: 6px;
+    background-color: #3C4654;
+    border-radius: 3px;
+}
+
+QSlider::handle:horizontal {
+    width: 16px;
+    margin: -5px 0;
+    border-radius: 8px;
+    background-color: #FF98AC;
+}

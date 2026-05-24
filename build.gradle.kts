@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "io.github.avaxerrr"
-version = "2.0.1"
+version = "2.1.0"
 
 repositories {
   mavenCentral()
@@ -40,14 +40,15 @@ intellijPlatform {
     }
 
     changeNotes = """
-            <h3>Upcoming - Version TBD</h3>
+            <h3>Version 2.1 - May 2026</h3>
             <ul>
+                <li><b>QSS Colors Panel:</b> Revamped saved color folders with search, drag/drop organization, multi-select actions, and import/export for sharing color collections.</li>
+                <li><b>Live Preview Tools:</b> Added PySide, PyQt, and C++ Qt helper files that reload a selected <code>.qss</code> file in a running Qt app when it is saved.</li>
+                <li><b>Editor Context Menu:</b> Added <code>Insert Color</code>, <code>Save Color</code>, and <code>Enable Live Preview</code> actions for QSS files.</li>
+                <li><b>Color Tools:</b> Added HSL and HSV support for validation, highlighting, copy, and insert actions.</li>
+                <li><b>QSS Syntax:</b> Expanded Qt stylesheet properties, pseudo-states, sub-controls, and icon properties for completion and validation.</li>
+                <li><b>Validation:</b> Fixed false warnings for Qt-specific properties, <code>qproperty-*</code> declarations, and border values that use Qt color functions.</li>
                 <li><b>IDE Compatibility:</b> Added support for 2026 JetBrains IDE builds.</li>
-                <li><b>QSS Syntax:</b> Added more Qt stylesheet properties, pseudo-states, sub-controls, and icon properties for completion and validation.</li>
-                <li><b>Validation:</b> Fixed false warnings and errors for Qt-specific properties, <code>qproperty-*</code> declarations, and border values that use Qt color functions.</li>
-                <li><b>QSS Colors Panel:</b> Revamped the color side panel with folders, quick rename, drag/drop organization, multi-select actions, live updates, and editable opacity-aware swatches.</li>
-                <li><b>Editor Context Menu:</b> Added <code>Insert Color</code> and <code>Save Color</code> actions for working with saved colors directly from the editor.</li>
-                <li><b>Color Tools:</b> Added support for HSL and HSV color values in validation, highlighting, copy, and insert actions.</li>
             </ul>
 
             <h3>Version 2.0.1 - February 2026</h3>
@@ -138,6 +139,14 @@ tasks {
   }
 
   buildSearchableOptions {
+    enabled = false
+  }
+
+  named("prepareJarSearchableOptions") {
+    enabled = false
+  }
+
+  named("jarSearchableOptions") {
     enabled = false
   }
 

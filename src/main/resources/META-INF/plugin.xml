@@ -7,16 +7,14 @@
   <description><![CDATA[
         <h2>QSS Toolkit - Qt Style Sheet Support for JetBrains IDEs</h2>
 
-        <p>QSS Toolkit adds dedicated Qt Style Sheet editing support to JetBrains IDEs. It helps you write, validate, navigate, and manage QSS files for Qt applications directly inside your editor.</p>
+        <p>QSS Toolkit adds dedicated Qt Style Sheet editing support to JetBrains IDEs. It helps you write, validate, navigate, preview colors, manage reusable palettes, and test QSS changes directly from your editor.</p>
 
-        <h3>Upcoming - Version TBD</h3>
+        <h3>Version 2.1 - May 2026</h3>
         <ul>
-            <li><b>IDE Compatibility:</b> Added support for 2026 JetBrains IDE builds.</li>
-            <li><b>QSS Syntax:</b> Added more Qt stylesheet properties, pseudo-states, sub-controls, and icon properties for completion and validation.</li>
-            <li><b>Validation:</b> Fixed false warnings and errors for Qt-specific properties, <code>qproperty-*</code> declarations, and border values that use Qt color functions.</li>
-            <li><b>QSS Colors Panel:</b> Revamped the color side panel with folders, quick rename, drag/drop organization, multi-select actions, live updates, and editable opacity-aware swatches.</li>
-            <li><b>Editor Context Menu:</b> Added <code>Insert Color</code> and <code>Save Color</code> actions for working with saved colors directly from the editor.</li>
-            <li><b>Color Tools:</b> Added support for HSL and HSV color values in validation, highlighting, copy, and insert actions.</li>
+            <li><b>Live Preview Tools:</b> Generate PySide, PyQt, or C++ Qt helpers that reload a selected <code>.qss</code> file when it is saved.</li>
+            <li><b>QSS Colors:</b> Improved saved color folders with search, drag/drop organization, multi-select actions, and import/export support.</li>
+            <li><b>Editor Workflow:</b> Added context menu actions for inserting colors, saving selected colors, and enabling live preview.</li>
+            <li><b>Syntax and Compatibility:</b> Expanded Qt stylesheet support, HSL/HSV color handling, validation fixes, and 2026 IDE compatibility.</li>
         </ul>
 
         <h3>Key Features</h3>
@@ -26,14 +24,15 @@
             <li><b>Real-time Validation:</b> Detects unknown properties, invalid values, incorrect units, malformed declarations, and common QSS mistakes while you edit.</li>
             <li><b>Qt-aware Syntax Handling:</b> Supports Qt-specific properties, <code>qproperty-*</code> declarations, palette roles, gradients, icon properties, and template placeholders such as <code>{{BUTTON_COLOR}}</code>.</li>
             <li><b>Visual Color Tools:</b> Shows color previews, opens a color picker from gutter icons, and preserves useful color formats when editing values.</li>
-            <li><b>Reusable Color Folders:</b> Save, rename, edit, organize, drag/drop, copy, and insert reusable colors from the QSS Colors tool window.</li>
+            <li><b>Reusable Color Folders:</b> Save, search, rename, edit, organize, drag/drop, copy, import, export, and insert reusable colors from the QSS Colors tool window.</li>
             <li><b>Editor Color Actions:</b> Use the editor context menu to insert saved colors or save a selected color without leaving the file.</li>
+            <li><b>Live Preview Tools:</b> Generate small PySide, PyQt, or C++ Qt helper files that reload a selected <code>.qss</code> file in a running app after you add the setup call once.</li>
             <li><b>Color Format Support:</b> Works with hex, RGB/RGBA, HSL/HSLA, HSV/HSVA, palette colors, transparent values, and Qt gradients.</li>
             <li><b>Universal JetBrains IDE Support:</b> Works in CLion, PyCharm, IntelliJ IDEA, WebStorm, Rider, and other IntelliJ Platform IDEs.</li>
         </ul>
 
         <h3>Quick Start</h3>
-        <p>Open any <code>.qss</code> file to use highlighting, completion, validation, navigation, and color tools. Use the QSS Colors tool window for reusable colors, and right-click in the editor to insert or save colors.</p>
+        <p>Open any <code>.qss</code> file to use highlighting, completion, validation, navigation, and color tools. Use the QSS Colors tool window for reusable colors, and right-click in the editor to insert colors, save colors, or enable live preview.</p>
   ]]></description>
 
   <!-- Product and plugin compatibility requirements -->
@@ -46,6 +45,10 @@
               implementationClass="io.github.avaxerrr.qsstoolkit.QssFileType"
               language="QSS"
               extensions="qss"/>
+
+    <fileType name="QSS Palette"
+              implementationClass="io.github.avaxerrr.qsstoolkit.palette.QssPaletteFileType"
+              extensions="qsspalette"/>
 
     <!-- Syntax highlighter -->
     <lang.syntaxHighlighterFactory
@@ -113,6 +116,9 @@
 
     <!-- File template for creating new QSS files -->
     <internalFileTemplate name="QssFile"/>
+
+    <notificationGroup id="QSS Toolkit"
+                       displayType="BALLOON"/>
 
     <!-- Validation annotator -->
     <annotator language="QSS" implementationClass="io.github.avaxerrr.qsstoolkit.validation.QssValidationAnnotator"/>

@@ -2,14 +2,21 @@ package io.github.avaxerrr.qsstoolkit.palette
 
 import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.fileChooser.FileChooser
+import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
+import com.intellij.openapi.fileChooser.FileChooserFactory
+import com.intellij.openapi.fileChooser.FileSaverDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.wm.StatusBar
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.components.JBTextField
 import com.intellij.ui.content.ContentFactory
 import com.intellij.ui.treeStructure.Tree
+import com.intellij.util.ui.JBUI
 import io.github.avaxerrr.qsstoolkit.QssIcons
 import io.github.avaxerrr.qsstoolkit.ui.QssColorSwatchIcon
 import java.awt.BorderLayout
@@ -22,6 +29,10 @@ import java.awt.datatransfer.UnsupportedFlavorException
 import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.io.File
+import java.io.IOException
+import java.util.Collections
+import java.util.IdentityHashMap
 import javax.swing.AbstractAction
 import javax.swing.DropMode
 import javax.swing.JButton
@@ -37,6 +48,10 @@ import javax.swing.JTabbedPane
 import javax.swing.JTree
 import javax.swing.SwingUtilities
 import javax.swing.TransferHandler
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
+import javax.swing.event.TreeExpansionEvent
+import javax.swing.event.TreeExpansionListener
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeCellRenderer
 import javax.swing.tree.DefaultTreeModel
@@ -47,7 +62,7 @@ class QssColorPaletteToolWindowFactory : ToolWindowFactory {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val toolWindowContent = QssColorPaletteToolWindowContent(project)
         val content = ContentFactory.getInstance().createContent(
-            toolWindowContent.getContent(), "Color Folders", false
+            toolWindowContent.getContent(), "", false
         )
         content.setDisposer(toolWindowContent)
         toolWindow.contentManager.addContent(content)
@@ -62,9 +77,13 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
     private val tree = object : Tree(treeModel) {
         override fun isWideSelection(): Boolean = false
     }
+    private val searchField = JBTextField()
     private val addColorButton = JButton("Add Color")
-    private val removeButton = JButton("Remove")
+    private val removeButton = JButton("Delete")
     private val renameButton = JButton("Rename")
+    private val expandedPalettes = Collections.newSetFromMap(IdentityHashMap<QssColorPalette, Boolean>())
+    private var filterText = ""
+    private var isRefreshingTree = false
     private val paletteChangeSubscription = paletteManager.addChangeListener {
         SwingUtilities.invokeLater {
             refreshTree(getSelectionAnchorItem())
@@ -77,13 +96,14 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
 
     private fun setupUI() {
         setupTree()
+        setupSearchField()
 
         val buttonPanel = JPanel()
         val addPaletteButton = JButton("Add Folder")
+        val importButton = JButton("Import")
 
         addPaletteButton.addActionListener {
-            val palette = paletteManager.createPalette()
-            refreshTree(palette)
+            addFolder()
         }
 
         addColorButton.addActionListener {
@@ -100,15 +120,53 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
             removeSelectedNode()
         }
 
+        importButton.addActionListener {
+            importPaletteFile()
+        }
+
         buttonPanel.add(addPaletteButton)
         buttonPanel.add(addColorButton)
         buttonPanel.add(renameButton)
         buttonPanel.add(removeButton)
+        buttonPanel.add(importButton)
 
-        panel.add(JBScrollPane(tree), BorderLayout.CENTER)
+        panel.add(createSearchPanel(), BorderLayout.NORTH)
+        panel.add(JBScrollPane(tree).apply {
+            transferHandler = tree.transferHandler
+        }, BorderLayout.CENTER)
         panel.add(buttonPanel, BorderLayout.SOUTH)
 
         refreshTree()
+    }
+
+    private fun setupSearchField() {
+        searchField.emptyText.text = "Search colors"
+        searchField.toolTipText = "Search by folder name, color name, or color value"
+        searchField.document.addDocumentListener(object : DocumentListener {
+            override fun insertUpdate(e: DocumentEvent) {
+                updateFilter()
+            }
+
+            override fun removeUpdate(e: DocumentEvent) {
+                updateFilter()
+            }
+
+            override fun changedUpdate(e: DocumentEvent) {
+                updateFilter()
+            }
+        })
+    }
+
+    private fun createSearchPanel(): JComponent {
+        return JPanel(BorderLayout()).apply {
+            border = JBUI.Borders.empty(4, 4, 0, 4)
+            add(searchField, BorderLayout.CENTER)
+        }
+    }
+
+    private fun updateFilter() {
+        filterText = searchField.text.orEmpty()
+        refreshTree(getSelectionAnchorItem())
     }
 
     private fun setupTree() {
@@ -120,9 +178,13 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
         tree.selectionModel.selectionMode = TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION
         tree.dragEnabled = true
         tree.dropMode = DropMode.ON_OR_INSERT
-        tree.transferHandler = PaletteTreeTransferHandler(paletteManager) { selectedItem ->
-            refreshTree(selectedItem)
-        }
+        val transferHandler = PaletteTreeTransferHandler(
+            paletteManager = paletteManager,
+            onMoved = { selectedItem -> refreshTree(selectedItem) },
+            onImportFiles = { files -> importPaletteFiles(files) }
+        )
+        tree.transferHandler = transferHandler
+        panel.transferHandler = transferHandler
         tree.toolTipText = ""
         tree.inputMap.put(
             KeyStroke.getKeyStroke(KeyEvent.VK_C, Toolkit.getDefaultToolkit().menuShortcutKeyMaskEx),
@@ -139,9 +201,19 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
         tree.addTreeSelectionListener {
             updateButtonState()
         }
+        tree.addTreeExpansionListener(object : TreeExpansionListener {
+            override fun treeExpanded(event: TreeExpansionEvent) {
+                updateStoredExpansion(event.path, expanded = true)
+            }
+
+            override fun treeCollapsed(event: TreeExpansionEvent) {
+                updateStoredExpansion(event.path, expanded = false)
+            }
+        })
 
         tree.addMouseListener(object : MouseAdapter() {
             override fun mousePressed(e: MouseEvent) {
+                handleBlankLeftClick(e)
                 handlePopup(e)
             }
 
@@ -253,25 +325,59 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
     }
 
     private fun refreshTree(selectedItem: Any? = null) {
+        isRefreshingTree = true
         rootNode.removeAllChildren()
 
-        for (palette in paletteManager.getAllPalettes()) {
+        for ((palette, colors) in QssColorPaletteFilter.filter(paletteManager.getAllPalettes(), filterText)) {
             val paletteNode = DefaultMutableTreeNode(palette)
-            for (color in palette.getAllColors()) {
+            for (color in colors) {
                 paletteNode.add(DefaultMutableTreeNode(color))
             }
             rootNode.add(paletteNode)
         }
 
         treeModel.reload()
-        expandAllNodes()
+        tree.dragEnabled = !isFilterActive()
+        restoreExpansionState()
         selectItem(selectedItem)
+        isRefreshingTree = false
         updateButtonState()
+    }
+
+    private fun isFilterActive(): Boolean {
+        return filterText.isNotBlank()
+    }
+
+    private fun restoreExpansionState() {
+        if (isFilterActive()) {
+            expandAllNodes()
+            return
+        }
+
+        val nodes = rootNode.breadthFirstEnumeration()
+        while (nodes.hasMoreElements()) {
+            val node = nodes.nextElement() as? DefaultMutableTreeNode ?: continue
+            val palette = node.userObject as? QssColorPalette ?: continue
+            if (palette in expandedPalettes) {
+                tree.expandPath(TreePath(node.path))
+            }
+        }
     }
 
     private fun expandAllNodes() {
         for (row in 0 until tree.rowCount) {
             tree.expandRow(row)
+        }
+    }
+
+    private fun updateStoredExpansion(path: TreePath, expanded: Boolean) {
+        if (isRefreshingTree || isFilterActive()) return
+
+        val palette = path.nodeUserObject() as? QssColorPalette ?: return
+        if (expanded) {
+            expandedPalettes.add(palette)
+        } else {
+            expandedPalettes.remove(palette)
         }
     }
 
@@ -308,12 +414,40 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
         if (path != null) {
             if (!tree.isPathSelected(path)) {
                 tree.selectionPath = path
+            } else {
+                normalizeSelectionForPopup(path)
             }
         } else {
             tree.clearSelection()
         }
 
         createContextMenu().show(tree, e.x, e.y)
+    }
+
+    private fun handleBlankLeftClick(e: MouseEvent) {
+        if (!SwingUtilities.isLeftMouseButton(e)) return
+        if (tree.getPathForLocation(e.x, e.y) != null) return
+
+        tree.clearSelection()
+    }
+
+    private fun normalizeSelectionForPopup(path: TreePath) {
+        val selectedPalettes = getSelectedPalettes()
+        val selectedColors = getSelectedColorSelections()
+        if (selectedPalettes.isEmpty() || selectedColors.isEmpty()) return
+
+        when (path.nodeUserObject()) {
+            is QssColor -> tree.selectionPath = path
+            is QssColorPalette -> {
+                val palettePaths = getSelectedNodes()
+                    .filter { it.userObject is QssColorPalette }
+                    .map { TreePath(it.path) }
+                    .toTypedArray()
+                if (palettePaths.isNotEmpty()) {
+                    tree.selectionPaths = palettePaths
+                }
+            }
+        }
     }
 
     private fun handleDoubleClick(e: MouseEvent) {
@@ -340,16 +474,73 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
     private fun createContextMenu(): JPopupMenu {
         val menu = JPopupMenu()
         val selectedNodes = getSelectedNodes()
+        val selectedPalettes = getSelectedPalettes()
+        val selectedColors = getSelectedColorSelections()
         val selectedValue = selectedNodes.singleOrNull()?.userObject
 
-        if (selectedValue is QssColorPalette) {
+        when {
+            selectedNodes.isEmpty() -> addEmptyContextMenuItems(menu)
+            selectedPalettes.isNotEmpty() && selectedColors.isEmpty() ->
+                addFolderContextMenuItems(menu, selectedPalettes, selectedValue)
+            selectedPalettes.isEmpty() && selectedColors.isNotEmpty() ->
+                addColorContextMenuItems(menu, selectedNodes, selectedValue)
+        }
+
+        return menu
+    }
+
+    private fun addFolderContextMenuItems(
+        menu: JPopupMenu,
+        selectedPalettes: List<QssColorPalette>,
+        selectedValue: Any?
+    ) {
+        if (selectedPalettes.size == 1 && selectedValue is QssColorPalette) {
             menu.add(JMenuItem("Add Color").apply {
                 addActionListener {
                     showColorChooser(selectedValue)
                 }
             })
+            menu.add(JMenuItem("Export Folder...").apply {
+                addActionListener {
+                    exportPalettes(
+                        palettes = listOf(selectedValue),
+                        suggestedFileName = suggestedPaletteFileName(selectedValue.name)
+                    )
+                }
+            })
+        } else {
+            menu.add(JMenuItem("Export Selected Folders...").apply {
+                addActionListener {
+                    exportPalettes(
+                        palettes = selectedPalettes,
+                        suggestedFileName = "selected-qss-colors.${QssColorPaletteFileFormat.FILE_EXTENSION}"
+                    )
+                }
+            })
         }
 
+        menu.addSeparator()
+
+        if (selectedPalettes.size == 1) {
+            menu.add(JMenuItem("Rename").apply {
+                addActionListener {
+                    startRenamingSelectedNode()
+                }
+            })
+        }
+
+        menu.add(JMenuItem(if (selectedPalettes.size == 1) "Delete" else "Delete Selected Folders").apply {
+            addActionListener {
+                removeSelectedNode()
+            }
+        })
+    }
+
+    private fun addColorContextMenuItems(
+        menu: JPopupMenu,
+        selectedNodes: List<DefaultMutableTreeNode>,
+        selectedValue: Any?
+    ) {
         if (selectedNodes.size == 1 && selectedValue is QssColor) {
             menu.add(JMenuItem("Edit Color").apply {
                 addActionListener {
@@ -357,9 +548,7 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
                     showColorChooser(palette, selectedValue)
                 }
             })
-        }
 
-        if (selectedNodes.size == 1 && (selectedValue is QssColorPalette || selectedValue is QssColor)) {
             menu.addSeparator()
             menu.add(JMenuItem("Rename").apply {
                 addActionListener {
@@ -371,15 +560,7 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
                     removeSelectedNode()
                 }
             })
-        } else if (selectedNodes.isNotEmpty() && getSelectedPalettes().isEmpty() && getSelectedColorSelections().isNotEmpty()) {
-            menu.add(JMenuItem("Delete Selected Colors").apply {
-                addActionListener {
-                    removeSelectedNode()
-                }
-            })
-        }
 
-        if (selectedValue is QssColor) {
             menu.addSeparator()
             addCopyItem(menu, "Copy Value") { selectedValue.toQssFormat() }
 
@@ -390,9 +571,38 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
                 }
             }
             menu.add(formatMenu)
+        } else {
+            menu.add(JMenuItem("Delete Selected Colors").apply {
+                addActionListener {
+                    removeSelectedNode()
+                }
+            })
         }
+    }
 
-        return menu
+    private fun addEmptyContextMenuItems(menu: JPopupMenu) {
+        menu.add(JMenuItem("Add Folder").apply {
+            addActionListener {
+                addFolder()
+            }
+        })
+        menu.addSeparator()
+
+        menu.add(JMenuItem("Import Palette...").apply {
+            addActionListener {
+                importPaletteFile()
+            }
+        })
+
+        menu.add(JMenuItem("Export All Folders...").apply {
+            isEnabled = paletteManager.getAllPalettes().isNotEmpty()
+            addActionListener {
+                exportPalettes(
+                    palettes = paletteManager.getAllPalettes(),
+                    suggestedFileName = "qss-colors.${QssColorPaletteFileFormat.FILE_EXTENSION}"
+                )
+            }
+        })
     }
 
     private fun copyFormatsFor(color: QssColor): List<QssColorFormat> {
@@ -405,6 +615,11 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
                 copyToClipboard(valueProvider())
             }
         })
+    }
+
+    private fun addFolder() {
+        val palette = paletteManager.createPalette()
+        refreshTree(palette)
     }
 
     private fun startRenamingSelectedNode() {
@@ -420,12 +635,17 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
         val selectedPalettes = getSelectedPalettes()
         val selectedColors = getSelectedColorSelections()
 
-        if (selectedPalettes.size == 1 && selectedColors.isEmpty()) {
-            if (!confirmRemoval("Delete folder '${selectedPalettes.single().name}' and all colors in it?")) {
+        if (selectedPalettes.isNotEmpty() && selectedColors.isEmpty()) {
+            val message = if (selectedPalettes.size == 1) {
+                "Delete folder '${selectedPalettes.single().name}' and all colors in it?"
+            } else {
+                "Delete ${selectedPalettes.size} selected folders and all colors in them?"
+            }
+            if (!confirmRemoval(message)) {
                 return
             }
 
-            paletteManager.removePalette(selectedPalettes.single())
+            paletteManager.removePalettes(selectedPalettes)
             refreshTree()
             return
         }
@@ -485,12 +705,145 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
     private fun canRemoveSelection(): Boolean {
         val selectedPalettes = getSelectedPalettes()
         val selectedColors = getSelectedColorSelections()
-        return (selectedPalettes.size == 1 && selectedColors.isEmpty()) ||
+        return (selectedPalettes.isNotEmpty() && selectedColors.isEmpty()) ||
             (selectedPalettes.isEmpty() && selectedColors.isNotEmpty())
     }
 
     private fun confirmRemoval(message: String): Boolean {
         return Messages.showYesNoDialog(project, message, "Delete Colors", null) == Messages.YES
+    }
+
+    private fun importPaletteFile() {
+        val descriptor = FileChooserDescriptorFactory.createSingleFileDescriptor()
+        val file = FileChooser.chooseFile(descriptor, project, null) ?: return
+
+        try {
+            val result = importPaletteText(VfsUtilCore.loadText(file))
+            refreshTree()
+            showImportResult(result)
+        } catch (exception: QssColorPaletteFileException) {
+            Messages.showErrorDialog(project, exception.message, "Import QSS Palette")
+        } catch (exception: IOException) {
+            Messages.showErrorDialog(project, "Could not read palette file: ${exception.message}", "Import QSS Palette")
+        }
+    }
+
+    private fun importPaletteFiles(files: List<File>): Boolean {
+        val paletteFiles = files
+            .filter { it.isFile && QssColorPaletteFileFormat.isSupportedImportFileName(it.name) }
+        if (paletteFiles.isEmpty()) return false
+
+        val results = mutableListOf<QssColorPaletteImportResult>()
+        val failures = mutableListOf<String>()
+
+        for (file in paletteFiles) {
+            try {
+                results.add(importPaletteText(file.readText(Charsets.UTF_8)))
+            } catch (exception: QssColorPaletteFileException) {
+                failures.add("${file.name}: ${exception.message}")
+            } catch (exception: IOException) {
+                failures.add("${file.name}: ${exception.message}")
+            }
+        }
+
+        if (results.isNotEmpty()) {
+            refreshTree()
+        }
+        showImportResults(results, failures)
+        return true
+    }
+
+    private fun importPaletteText(text: String): QssColorPaletteImportResult {
+        return QssColorPaletteFileFormat.importInto(
+            paletteManager = paletteManager,
+            text = text
+        )
+    }
+
+    private fun exportPalettes(palettes: List<QssColorPalette>, suggestedFileName: String) {
+        if (palettes.isEmpty()) {
+            Messages.showInfoMessage(project, "There are no color folders to export.", "Export QSS Palette")
+            return
+        }
+
+        val descriptor = FileSaverDescriptor(
+            "Export QSS Palette",
+            "Export color folders to a .qsspalette JSON file."
+        )
+        val target = FileChooserFactory.getInstance()
+            .createSaveFileDialog(descriptor, project)
+            .save(project.baseDir, suggestedFileName)
+            ?: return
+
+        try {
+            val exportFile = target.file.withPaletteExtension()
+            exportFile.writeText(QssColorPaletteFileFormat.exportPalettes(palettes), Charsets.UTF_8)
+            target.virtualFile?.parent?.refresh(false, false)
+            StatusBar.Info.set("Exported ${palettes.size} color folder(s)", project)
+        } catch (exception: IOException) {
+            Messages.showErrorDialog(project, "Could not export palette file: ${exception.message}", "Export QSS Palette")
+        }
+    }
+
+    private fun showImportResult(result: QssColorPaletteImportResult) {
+        val message = "Imported ${result.importedPalettes} folder(s) and ${result.importedColors} color(s)"
+        val skippedCount = result.skippedColors.size
+
+        if (skippedCount == 0) {
+            StatusBar.Info.set(message, project)
+            return
+        }
+
+        StatusBar.Info.set("$message; skipped $skippedCount color(s)", project)
+        Messages.showWarningDialog(
+            project,
+            "$message.\nSkipped $skippedCount unsupported color value(s).",
+            "Import QSS Palette"
+        )
+    }
+
+    private fun showImportResults(
+        results: List<QssColorPaletteImportResult>,
+        failures: List<String>
+    ) {
+        val importedPalettes = results.sumOf { it.importedPalettes }
+        val importedColors = results.sumOf { it.importedColors }
+        val skippedColors = results.sumOf { it.skippedColors.size }
+        val message = "Imported $importedPalettes folder(s) and $importedColors color(s)"
+
+        StatusBar.Info.set(
+            if (failures.isEmpty() && skippedColors == 0) {
+                message
+            } else {
+                "$message; skipped $skippedColors color(s), failed ${failures.size} file(s)"
+            },
+            project
+        )
+
+        if (failures.isNotEmpty() || skippedColors > 0) {
+            val warning = buildString {
+                append(message)
+                if (skippedColors > 0) {
+                    append(".\nSkipped $skippedColors unsupported color value(s).")
+                }
+                if (failures.isNotEmpty()) {
+                    append("\nFailed to import ${failures.size} file(s):")
+                    failures.take(5).forEach { failure ->
+                        append("\n")
+                        append(failure)
+                    }
+                }
+            }
+            Messages.showWarningDialog(project, warning, "Import QSS Palette")
+        }
+    }
+
+    private fun suggestedPaletteFileName(name: String): String {
+        val safeName = name
+            .replace(Regex("[\\\\/:*?\"<>|]+"), "_")
+            .trim()
+            .ifEmpty { "qss-colors" }
+        return "$safeName.${QssColorPaletteFileFormat.FILE_EXTENSION}"
     }
 
     fun getContent(): JComponent = panel
@@ -579,7 +932,8 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
 
     private class PaletteTreeTransferHandler(
         private val paletteManager: QssColorPaletteManager,
-        private val onMoved: (Any?) -> Unit
+        private val onMoved: (Any?) -> Unit,
+        private val onImportFiles: (List<File>) -> Boolean
     ) : TransferHandler() {
         private val itemFlavor = DataFlavor(DraggedItem::class.java, "QSS palette tree item")
 
@@ -617,7 +971,14 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
         }
 
         override fun canImport(support: TransferSupport): Boolean {
-            if (!support.isDrop || !support.isDataFlavorSupported(itemFlavor)) return false
+            if (!support.isDrop) return false
+
+            if (support.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+                return support.importedFiles()
+                    .any { file -> QssColorPaletteFileFormat.isSupportedImportFileName(file.name) }
+            }
+
+            if (!support.isDataFlavorSupported(itemFlavor)) return false
 
             val draggedItem = support.draggedItem() ?: return false
             val dropLocation = support.dropLocation as? JTree.DropLocation ?: return false
@@ -626,6 +987,10 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
 
         override fun importData(support: TransferSupport): Boolean {
             if (!canImport(support)) return false
+
+            if (support.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+                return onImportFiles(support.importedFiles())
+            }
 
             val draggedItem = support.draggedItem() ?: return false
             val dropLocation = support.dropLocation as? JTree.DropLocation ?: return false
@@ -711,6 +1076,17 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
                 null
             }
         }
+
+        @Suppress("UNCHECKED_CAST")
+        private fun TransferSupport.importedFiles(): List<File> {
+            return try {
+                transferable.getTransferData(DataFlavor.javaFileListFlavor) as? List<File> ?: emptyList()
+            } catch (_: UnsupportedFlavorException) {
+                emptyList()
+            } catch (_: java.io.IOException) {
+                emptyList()
+            }
+        }
     }
 
     private class PaletteTransferable(
@@ -752,4 +1128,12 @@ private fun DefaultMutableTreeNode.parentPalette(): QssColorPalette? {
 
 private fun TreePath.nodeUserObject(): Any? {
     return (lastPathComponent as? DefaultMutableTreeNode)?.userObject
+}
+
+private fun File.withPaletteExtension(): File {
+    return if (extension.equals(QssColorPaletteFileFormat.FILE_EXTENSION, ignoreCase = true)) {
+        this
+    } else {
+        File(parentFile, "$name.${QssColorPaletteFileFormat.FILE_EXTENSION}")
+    }
 }

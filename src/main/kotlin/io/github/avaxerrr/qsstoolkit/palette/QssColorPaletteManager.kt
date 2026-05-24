@@ -59,6 +59,16 @@ class QssColorPaletteManager : PersistentStateComponent<QssColorPaletteManager.S
         updateState()
     }
 
+    fun removePalettes(palettesToRemove: List<QssColorPalette>): Int {
+        val selectedPalettes = palettesToRemove.toPaletteIdentitySet()
+        val removedCount = palettes.count { it in selectedPalettes }
+        if (removedCount == 0) return 0
+
+        palettes.removeAll { it in selectedPalettes }
+        updateState()
+        return removedCount
+    }
+
     fun getAllPalettes(): List<QssColorPalette> = palettes.toList()
 
     fun getPalette(name: String): QssColorPalette? {
@@ -320,6 +330,12 @@ class QssColorPaletteManager : PersistentStateComponent<QssColorPaletteManager.S
 private fun List<QssColor>.toIdentitySet(): Set<QssColor> {
     return java.util.Collections.newSetFromMap(java.util.IdentityHashMap<QssColor, Boolean>()).apply {
         addAll(this@toIdentitySet)
+    }
+}
+
+private fun List<QssColorPalette>.toPaletteIdentitySet(): Set<QssColorPalette> {
+    return java.util.Collections.newSetFromMap(java.util.IdentityHashMap<QssColorPalette, Boolean>()).apply {
+        addAll(this@toPaletteIdentitySet)
     }
 }
 
