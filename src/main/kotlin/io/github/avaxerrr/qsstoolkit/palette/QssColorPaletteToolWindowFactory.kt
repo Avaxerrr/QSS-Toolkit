@@ -3,7 +3,7 @@ package io.github.avaxerrr.qsstoolkit.palette
 import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.fileChooser.FileChooser
-import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
+import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.fileChooser.FileChooserFactory
 import com.intellij.openapi.fileChooser.FileSaverDescriptor
 import com.intellij.openapi.project.Project
@@ -31,6 +31,7 @@ import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.io.File
 import java.io.IOException
+import java.nio.file.Path
 import java.util.Collections
 import java.util.IdentityHashMap
 import javax.swing.AbstractAction
@@ -714,7 +715,7 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
     }
 
     private fun importPaletteFile() {
-        val descriptor = FileChooserDescriptorFactory.createSingleFileDescriptor()
+        val descriptor = createPaletteImportDescriptor()
         val file = FileChooser.chooseFile(descriptor, project, null) ?: return
 
         try {
@@ -766,13 +767,10 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
             return
         }
 
-        val descriptor = FileSaverDescriptor(
-            "Export QSS Palette",
-            "Export color folders to a .qsspalette JSON file."
-        )
+        val descriptor = createPaletteExportDescriptor()
         val target = FileChooserFactory.getInstance()
             .createSaveFileDialog(descriptor, project)
-            .save(project.baseDir, suggestedFileName)
+            .save(projectSaveDirectory(), suggestedFileName)
             ?: return
 
         try {
@@ -783,6 +781,44 @@ class QssColorPaletteToolWindowContent(private val project: Project) : Disposabl
         } catch (exception: IOException) {
             Messages.showErrorDialog(project, "Could not export palette file: ${exception.message}", "Export QSS Palette")
         }
+    }
+
+    private fun createPaletteImportDescriptor(): FileChooserDescriptor {
+        return FileChooserDescriptor(true, false, false, false, false, false)
+            .withTitle("Import QSS Palette")
+            .withDescription("Choose a .qsspalette or .json palette file.")
+            .withFileFilter { file ->
+                file.isDirectory || QssColorPaletteFileFormat.isSupportedImportFileName(file.name)
+            }
+    }
+
+    private fun createPaletteExportDescriptor(): FileSaverDescriptor {
+        val title = "Export QSS Palette"
+        val description = "Export color folders to a .qsspalette JSON file."
+        val extension = QssColorPaletteFileFormat.FILE_EXTENSION
+
+        // IntelliJ 2025.1 adds non-deprecated FileSaverDescriptor constructors,
+        // while 2024.2 only has the older vararg constructor.
+        val descriptorClass = FileSaverDescriptor::class.java
+        val currentConstructor = descriptorClass.constructors.firstOrNull { constructor ->
+            constructor.parameterTypes.contentEquals(
+                arrayOf(String::class.java, String::class.java, String::class.java)
+            )
+        }
+
+        if (currentConstructor != null) {
+            return currentConstructor.newInstance(title, description, extension) as FileSaverDescriptor
+        }
+
+        return descriptorClass
+            .getConstructor(String::class.java, String::class.java, Array<String>::class.java)
+            .newInstance(title, description, arrayOf(extension)) as FileSaverDescriptor
+    }
+
+    private fun projectSaveDirectory(): Path {
+        return project.basePath
+            ?.let { Path.of(it) }
+            ?: Path.of(System.getProperty("user.home", "."))
     }
 
     private fun showImportResult(result: QssColorPaletteImportResult) {

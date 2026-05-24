@@ -4,7 +4,7 @@
 
 **Professional Qt Style Sheet (QSS) editing for all JetBrains IDEs**
 
-[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/avaxerrr/qss-toolkit/releases)
+[![Version](https://img.shields.io/badge/version-2.1.1-blue.svg)](https://github.com/avaxerrr/qss-toolkit/releases)
 [![JetBrains Plugin](https://img.shields.io/badge/JetBrains-Plugin-orange.svg)](https://plugins.jetbrains.com/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE.md)
 
@@ -21,6 +21,10 @@ Stop switching between your IDE and external editors when styling Qt application
 <img width="2559" height="1439" alt="Screenshot 2025-12-26 211437" src="https://github.com/user-attachments/assets/7f580ce9-3a24-46cc-b368-74d240507285"/>
 
 ---
+
+## What's New in Version 2.1.1
+
+- **Marketplace compatibility cleanup** - Removed deprecated IntelliJ Platform API usage reported by Plugin Verifier while keeping support for 2024.2 through 2026.2 IDE builds
 
 ## What's New in Version 2.1
 
