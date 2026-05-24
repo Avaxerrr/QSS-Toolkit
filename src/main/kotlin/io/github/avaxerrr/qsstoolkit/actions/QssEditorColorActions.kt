@@ -8,8 +8,10 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.Separator
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.StatusBar
 import io.github.avaxerrr.qsstoolkit.QssIcons
 import io.github.avaxerrr.qsstoolkit.QssFileType
@@ -36,7 +38,7 @@ class QssEditorColorsActionGroup : ActionGroup("QSS Toolkit", true), DumbAware {
     override fun getChildren(e: AnActionEvent?): Array<AnAction> {
         val project = e?.project ?: return emptyArray()
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return emptyArray()
-        val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE)
+        val virtualFile = e.editorVirtualFile(editor)
         val paletteManager = QssColorPaletteManager.getInstance(project)
         val palettes = paletteManager.getAllPalettes()
 
@@ -49,12 +51,19 @@ class QssEditorColorsActionGroup : ActionGroup("QSS Toolkit", true), DumbAware {
                 add(AddSelectedColorGroup(paletteManager, palettes, selectedColor))
             }
 
-            if (virtualFile?.extension?.equals(QssFileType.DEFAULT_EXTENSION, ignoreCase = true) == true) {
-                add(Separator.getInstance())
-                add(QssLiveReloadSnippetActionGroup(virtualFile.path))
-            }
+            add(Separator.getInstance())
+            add(QssLivePreviewActionGroup(currentQssPath = virtualFile?.takeIf { it.isQssFile() }?.path))
         }.toTypedArray()
     }
+}
+
+private fun VirtualFile.isQssFile(): Boolean {
+    return extension.equals(QssFileType.DEFAULT_EXTENSION, ignoreCase = true)
+}
+
+private fun AnActionEvent.editorVirtualFile(editor: Editor): VirtualFile? {
+    return getData(CommonDataKeys.VIRTUAL_FILE)
+        ?: FileDocumentManager.getInstance().getFile(editor.document)
 }
 
 private class InsertColorGroup(
