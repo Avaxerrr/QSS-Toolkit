@@ -4,7 +4,7 @@
 
 **Professional Qt Style Sheet (QSS) editing for all JetBrains IDEs**
 
-[![Version](https://img.shields.io/badge/version-2.0.1-blue.svg)](https://github.com/avaxerrr/qss-toolkit/releases)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/avaxerrr/qss-toolkit/releases)
 [![JetBrains Plugin](https://img.shields.io/badge/JetBrains-Plugin-orange.svg)](https://plugins.jetbrains.com/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE.md)
 
@@ -22,13 +22,14 @@ Stop switching between your IDE and external editors when styling Qt application
 
 ---
 
-## What's New in Upcoming Version
+## What's New in Version 2.1
 
-- **2026 IDE support** - Added compatibility for newer JetBrains IDE builds
-- **Revamped QSS Colors panel** - Organize colors with folders, drag/drop, multi-select actions, live updates, and editable opacity-aware swatches
-- **Editor context menu** - Use `Insert Color` and `Save Color` directly from the editor
+- **Live Preview Tools** - Generate PySide, PyQt, or C++ Qt helper files that reload a selected `.qss` file when it is saved
+- **Revamped QSS Colors panel** - Organize colors with folders, search, drag/drop, multi-select actions, import/export, and editable opacity-aware swatches
+- **Editor context menu** - Use `Insert Color`, `Save Color`, and `Enable Live Preview` directly from QSS files
 - **More color formats** - Added HSL/HSLA and HSV/HSVA support alongside hex, RGB, and RGBA
-- **Validation fixes** - Improved handling for Qt-specific properties, `qproperty-*` declarations, and Qt color functions
+- **Validation fixes** - Improved handling for Qt-specific properties, `qproperty-*` declarations, border values, and Qt color functions
+- **2026 IDE support** - Added compatibility for newer JetBrains IDE builds
 
 ---
 
@@ -80,6 +81,12 @@ Stop switching between your IDE and external editors when styling Qt application
 - **Format support** - Works with hex, RGB/RGBA, HSL/HSLA, and HSV/HSVA colors
 - **Gradient recognition** - Support for `qlineargradient()`, `qradialgradient()`, `qconicalgradient()`
 - **QSS Colors panel** - Save, edit, organize, and insert reusable colors from the side panel or editor context menu
+
+### Live Preview Tools
+- Generate small helper files for PySide6, PyQt6, PySide2/PyQt5, or C++ Qt
+- Helpers watch the selected `.qss` file and reload it in the running Qt app when saved
+- No debugger hooks, process injection, or external watcher setup required
+- Works after adding one setup call to your app
 
 ### Smart Editing Features
 - **Auto-close brackets & quotes** - Automatic insertion of closing characters
@@ -146,6 +153,14 @@ Works in **ALL** JetBrains IDEs with **NO** language-specific dependencies:
    - Copy as `color: ...;`
    - Copy as `background-color: ...;`
 5. Double-click to quickly copy hex value to clipboard
+
+### Live Preview
+1. Open a `.qss` file
+2. Right-click in the editor
+3. Choose **QSS Toolkit → Enable Live Preview**
+4. Select your framework: PySide6, PyQt6, PySide2/PyQt5, or C++ Qt
+5. Add the shown setup call to your app after `QApplication` is created
+6. Run your app, edit the `.qss` file, and save to reload the stylesheet
 
 ### Structure Navigation
 - Open **View → Tool Windows → Structure** (or **Alt+7**)
