@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "io.github.avaxerrr"
-version = "2.1.1"
+version = "2.1"
 
 repositories {
   mavenCentral()
@@ -40,11 +40,6 @@ intellijPlatform {
     }
 
     changeNotes = """
-            <h3>Version 2.1.1 - May 2026</h3>
-            <ul>
-                <li><b>Compatibility:</b> Removed deprecated IntelliJ Platform API usage reported by Plugin Verifier while keeping support for 2024.2 through 2026.2 IDE builds.</li>
-            </ul>
-
             <h3>Version 2.1 - May 2026</h3>
             <ul>
                 <li><b>QSS Colors Panel:</b> Revamped saved color folders with search, drag/drop organization, multi-select actions, and import/export for sharing color collections.</li>
